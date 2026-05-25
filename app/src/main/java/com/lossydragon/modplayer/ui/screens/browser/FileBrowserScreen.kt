@@ -30,6 +30,8 @@ import com.lossydragon.modplayer.model.ModuleFile
 import com.lossydragon.modplayer.model.PlaybackStatus
 import com.lossydragon.modplayer.model.PlayerUiState
 import com.lossydragon.modplayer.player.PlayerViewModel
+import com.lossydragon.modplayer.ui.components.MessageBox
+import com.lossydragon.modplayer.ui.components.ProgressbarIndicator
 import com.lossydragon.modplayer.ui.screens.browser.components.BreadCrumbs
 import com.lossydragon.modplayer.ui.screens.browser.components.BrowserInputField
 import com.lossydragon.modplayer.ui.screens.browser.components.EmptyPrompt
@@ -204,7 +206,7 @@ private fun FileBrowserScreenContent(
         },
         floatingActionButton = {
             AnimatedVisibility(
-                visible = !hasModule && browserState.hasStorageAccess && !browserState.isLoading,
+                visible = !hasModule && browserState.hasStorageAccess,
                 enter = scaleIn() + fadeIn(),
                 exit = scaleOut() + fadeOut(),
             ) {
@@ -293,12 +295,10 @@ private fun FileBrowserScreenContent(
         },
         content = { padding ->
             when {
-                browserState.isLoading -> Box(
+                browserState.isLoading -> ProgressbarIndicator(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(padding),
-                    contentAlignment = Alignment.Center,
-                    content = { CircularProgressIndicator() }
+                        .padding(padding)
                 )
 
                 !browserState.hasStorageAccess -> EmptyPrompt(
@@ -306,12 +306,11 @@ private fun FileBrowserScreenContent(
                     onPick = onFolderPick,
                 )
 
-                browserState.files.isEmpty() && browserState.directories.isEmpty() -> Box(
+                browserState.files.isEmpty() && browserState.directories.isEmpty() -> MessageBox(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(padding),
-                    contentAlignment = Alignment.Center,
-                    content = { Text(text = "No module files found in this folder.") }
+                    text = "No module files found in this folder.",
                 )
 
                 else -> ModuleList(

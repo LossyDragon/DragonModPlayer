@@ -21,6 +21,7 @@ import com.lossydragon.modplayer.model.SearchResult
 import com.lossydragon.modplayer.model.SearchType
 import com.lossydragon.modplayer.model.Sponsor
 import com.lossydragon.modplayer.ui.components.MessageBox
+import com.lossydragon.modplayer.ui.components.ProgressbarIndicator
 import com.lossydragon.modplayer.ui.screens.downloads.components.ArtistListItem
 import com.lossydragon.modplayer.ui.screens.downloads.components.ModuleListItem
 import com.lossydragon.modplayer.ui.screens.downloads.viewmodel.DownloadViewModel
@@ -95,7 +96,7 @@ private fun DownloadScreenContent(
                 .fillMaxSize(),
         ) {
             if (state.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                ProgressbarIndicator(modifier = Modifier.align(Alignment.Center))
             }
 
             state.error?.let {

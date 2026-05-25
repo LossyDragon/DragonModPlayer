@@ -19,6 +19,7 @@ import com.lossydragon.modplayer.model.Module
 import com.lossydragon.modplayer.model.ModuleResult
 import com.lossydragon.modplayer.model.ModuleResultState
 import com.lossydragon.modplayer.ui.components.MessageBox
+import com.lossydragon.modplayer.ui.components.ProgressbarIndicator
 import com.lossydragon.modplayer.ui.screens.downloads.components.ModuleDetailLayout
 import com.lossydragon.modplayer.ui.screens.downloads.viewmodel.ModuleResultViewModel
 import com.lossydragon.modplayer.ui.theme.AppTheme
@@ -221,7 +222,7 @@ private fun DownloadModuleContent(
                     .fillMaxSize(),
                 contentAlignment = Alignment.Center,
                 content = {
-                    if (state.isLoading) CircularProgressIndicator()
+                    if (state.isLoading) ProgressbarIndicator()
 
                     state.softError?.let {
                         MessageBox(
