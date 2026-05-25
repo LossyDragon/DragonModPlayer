@@ -57,8 +57,8 @@ class ModPlayer(
         Uri.Builder()
             .scheme(ContentResolver.SCHEME_ANDROID_RESOURCE)
             .authority(context.packageName)
-            .appendPath(context.resources.getResourceTypeName(R.mipmap.ic_launcher))
-            .appendPath(context.resources.getResourceEntryName(R.mipmap.ic_launcher))
+            .appendPath(context.resources.getResourceEntryName(R.drawable.ic_launcher_background))
+            .appendPath(context.resources.getResourceTypeName(R.drawable.ic_launcher_foreground))
             .build()
     }
 

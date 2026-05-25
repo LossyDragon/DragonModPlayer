@@ -52,8 +52,8 @@ class PlayerService : MediaLibraryService() {
         Uri.Builder()
             .scheme(ContentResolver.SCHEME_ANDROID_RESOURCE)
             .authority(packageName)
-            .appendPath(resources.getResourceTypeName(R.mipmap.ic_launcher))
-            .appendPath(resources.getResourceEntryName(R.mipmap.ic_launcher))
+            .appendPath(resources.getResourceEntryName(R.drawable.ic_launcher_background))
+            .appendPath(resources.getResourceTypeName(R.drawable.ic_launcher_foreground))
             .build()
     }
 

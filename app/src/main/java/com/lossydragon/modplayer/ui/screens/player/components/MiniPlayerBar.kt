@@ -63,13 +63,11 @@ fun MiniPlayerBar(
         ),
         leadingContent = {
             Image(
-                painter = painterResource(R.mipmap.ic_launcher),
+                painter = painterResource(R.drawable.ic_launcher_foreground),
                 contentDescription = null,
                 modifier = Modifier
                     .size(48.dp)
-                    .graphicsLayer {
-                        compositingStrategy = CompositingStrategy.Offscreen
-                    },
+                    .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen },
             )
         },
         trailingContent = {
