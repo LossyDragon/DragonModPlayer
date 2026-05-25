@@ -12,7 +12,7 @@ android {
     }
 
     defaultConfig {
-        minSdk = 21
+        minSdk = 26
         ndk.abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
         consumerProguardFiles("consumer-rules.pro")
         externalNativeBuild.cmake {
@@ -40,6 +40,6 @@ android {
         implementation(platform(libs.compose.bom))
         implementation(libs.compose.runtime)
         // Audio Renderer
-        implementation(libs.google.oboe)
+        implementation(libs.oboe)
     }
 }

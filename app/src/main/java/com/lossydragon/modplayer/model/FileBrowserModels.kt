@@ -1,0 +1,34 @@
+package com.lossydragon.modplayer.model
+
+import android.net.Uri
+import androidx.compose.runtime.*
+import androidx.media3.common.Player
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+
+/** UI state and domain models for the SAF file browser. */
+
+enum class BrowserSortOrder { NAME, TYPE, SIZE }
+
+@Immutable
+data class FileItem(
+    val name: String,
+    val uri: Uri,
+    val isDirectory: Boolean,
+    val size: Long
+)
+
+@Immutable
+data class BrowserUiState(
+    val currentPath: String = "",
+    val files: ImmutableList<ModuleFile> = persistentListOf(),
+    val directories: ImmutableList<FileItem> = persistentListOf(),
+    val breadcrumbs: ImmutableList<String> = persistentListOf(),
+    val isLoading: Boolean = true,
+    val hasStorageAccess: Boolean = false,
+    val isShuffle: Boolean = false,
+    val repeatMode: Int = Player.REPEAT_MODE_OFF,
+    val error: String? = null,
+    val sortOrder: BrowserSortOrder = BrowserSortOrder.NAME,
+    val filterQuery: String = ""
+)

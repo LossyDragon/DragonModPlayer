@@ -1,47 +1,65 @@
 package com.lossydragon.modplayer
 
+import android.Manifest
+import android.content.ComponentName
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.lossydragon.modplayer.ui.theme.DragonModPlayerTheme
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.media3.session.MediaController
+import androidx.media3.session.SessionToken
+import com.google.common.util.concurrent.ListenableFuture
+import com.lossydragon.modplayer.player.PlayerService
+import com.lossydragon.modplayer.ui.AppNavHost
+import com.lossydragon.modplayer.ui.theme.AppTheme
+import com.lossydragon.modplayer.util.requestNotificationPermission
+import com.lossydragon.modplayer.util.requestWriteStoragePermission
+import com.lossydragon.modplayer.util.setEdgeToEdgeConfig
 
 class MainActivity : ComponentActivity() {
+
+    private var controllerFuture: ListenableFuture<MediaController>? = null
+
+    private val notificationPermission = registerForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        callback = { /* No-Op */ }
+    )
+
+    private val storagePermission = registerForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        callback = { /* No-Op */ }
+    )
+
+    override fun onStart() {
+        super.onStart()
+        val sessionToken = SessionToken(
+            this,
+            ComponentName(this, PlayerService::class.java)
+        )
+        controllerFuture = MediaController.Builder(this, sessionToken).buildAsync()
+    }
+
+    override fun onStop() {
+        controllerFuture?.let { MediaController.releaseFuture(it) }
+        controllerFuture = null
+        super.onStop()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        setEdgeToEdgeConfig()
+
+        requestNotificationPermission {
+            notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        requestWriteStoragePermission {
+            storagePermission.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        }
+
         setContent {
-            DragonModPlayerTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+            AppTheme {
+                AppNavHost(onBack = ::finish)
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    DragonModPlayerTheme {
-        Greeting("Android")
     }
 }

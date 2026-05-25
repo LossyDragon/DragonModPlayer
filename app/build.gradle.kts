@@ -2,7 +2,11 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.compiler)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.gradle.kotlinter)
+    alias(libs.plugins.stability.analyzer)
+    alias(libs.plugins.ksp)
 }
 
 kotlin {
@@ -10,6 +14,10 @@ kotlin {
         freeCompilerArgs.add("-Xexplicit-backing-fields")
         jvmTarget.set(JvmTarget.fromTarget(libs.versions.java.get()))
     }
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 android {
@@ -21,11 +29,19 @@ android {
     defaultConfig {
         applicationId = "com.lossydragon.modplayer"
 
-        minSdk = 24
-        targetSdk = 37
+        /*
+         * https://apilevels.com/
+         */
+        minSdk = 26 // Oreo
+        targetSdk = 37 // Cinnamon Bun (terrible codename).
 
         versionCode = 1
         versionName = "1.0"
+
+        ndk.abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+
+        val apiKey = project.property("modArchiveApiKey") as String
+        buildConfigField("String", "API_KEY", apiKey)
     }
 
     buildTypes {
@@ -57,11 +73,25 @@ android {
 }
 
 dependencies {
-    // Local Projects
     implementation(project(":libxmp"))
 
     debugImplementation(libs.compose.ui.tooling.preview)
     implementation(platform(libs.compose.bom))
     implementation(libs.bundles.compose)
-    implementation(libs.bundles.communityCompose)
+    implementation(libs.kotlinx.immutable)
+    implementation(libs.materialKolor)
+    implementation(libs.compose.placeholder) // TODO try out
+    implementation(libs.reorderable)
+    implementation(platform(libs.koin.bom))
+    implementation(libs.bundles.koin)
+    implementation(libs.bundles.nav3)
+    implementation(libs.media3.common)
+    implementation(libs.media3.session)
+    implementation(libs.timber)
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+    implementation(libs.bundles.ktor)
+    implementation(libs.datastore.preferences)
+    implementation(libs.kotlinx.serialization.json)
 }
