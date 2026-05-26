@@ -1,0 +1,62 @@
+package com.lossydragon.modplayer.ui.preferences
+
+import androidx.activity.compose.BackHandler
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.*
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
+import com.lossydragon.modplayer.ui.NavKeyPreferences
+import kotlinx.collections.immutable.toPersistentList
+import kotlinx.collections.immutable.toPersistentSet
+import org.helllabs.libxmp.Xmp
+
+@Composable
+fun NavPreferences(
+    modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState,
+    onBack: () -> Unit
+) {
+    val backStack = rememberNavBackStack(NavKeyPreferences.Preferences)
+
+    BackHandler(enabled = backStack.size > 1) {
+        backStack.removeLastOrNull()
+    }
+
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        entryDecorators = listOf(
+            rememberSaveableStateHolderNavEntryDecorator(),
+            rememberViewModelStoreNavEntryDecorator(),
+        ),
+        entryProvider = entryProvider {
+            entry<NavKeyPreferences.Preferences> {
+                PreferencesScreen(
+                    modifier = modifier,
+                    onBack = onBack,
+                    onFormats = { backStack.add(NavKeyPreferences.Formats) },
+                    onAbout = { backStack.add(NavKeyPreferences.About) }
+                )
+            }
+            entry<NavKeyPreferences.About> {
+                //   onBack = backStack::removeLastOrNull,
+            }
+
+            entry<NavKeyPreferences.Formats> {
+                PreferencesFormats(
+                    modifier = modifier,
+                    onBack = { backStack.removeLastOrNull() },
+                    formatList = Xmp.getFormats().toPersistentList(),
+                    onClick = {
+                        TODO()
+                    }
+                )
+                //   onBack = backStack::removeLastOrNull,
+            }
+        }
+    )
+}

@@ -9,50 +9,63 @@ import org.helllabs.libxmp.model.FrameInfo
 import org.helllabs.libxmp.model.ModInfo
 import org.helllabs.libxmp.model.ModVars
 
+/**
+ * https://github.com/libxmp/libxmp/blob/master/docs/libxmp.rst
+ */
 object Xmp {
 
     private const val TAG = "XMP Library"
 
     const val MIN_BUFFER_MS = 80
-
     const val MAX_BUFFER_MS = 1000
 
-    const val DUCK_VOLUME = 700 // 30% (0f..1f)
+    /* sample format flags */
+    const val XMP_FORMAT_8BIT = (1 shl 0)       /* Mix to 8-bit instead of 16 */
+    const val XMP_FORMAT_UNSIGNED = (1 shl 1)   /* Mix to unsigned samples */
+    const val XMP_FORMAT_MONO = (1 shl 2)       /* Mix to mono instead of stereo */
+    const val XMP_FORMAT_32BIT = (1 shl 3)      /* Mix to 32-bit int instead of 16 */
 
-    // Return codes
-    const val XMP_END = 1 // End of module reached
+    /* player parameters */
+    const val XMP_PLAYER_AMP = 0            /* Amplification factor */
+    const val XMP_PLAYER_MIX = 1            /* Stereo mixing */
+    const val XMP_PLAYER_INTERP = 2         /* Interpolation type */
+    const val XMP_PLAYER_DSP = 3            /* DSP effect flags */
+    const val XMP_PLAYER_FLAGS = 4          /* Player flags */
+    const val XMP_PLAYER_CFLAGS = 5         /* Player flags for current module */
+    const val XMP_PLAYER_SMPCTL = 6         /* Sample control flags */
+    const val XMP_PLAYER_VOLUME = 7         /* Player module volume */
+    const val XMP_PLAYER_SMIX_VOLUME = 9    /* SMIX volume */
+    const val XMP_PLAYER_DEFPAN = 10        /* Default pan setting */
+    const val XMP_PLAYER_MODE = 11          /* Player personality */
+    const val XMP_PLAYER_VOICES = 13        /* Maximum number of mixer voices */
 
-    // Sample format flags
-    const val FORMAT_MONO = 1 shl 2
+    /* interpolation types */
+    const val XMP_INTERP_NEAREST = 0    /* Nearest neighbor */
+    const val XMP_INTERP_LINEAR = 1     /* Linear (default) */
+    const val XMP_INTERP_SPLINE = 2     /* Cubic spline */
 
-    // player parameters
-    const val PLAYER_AMP = 0 // Amplification factor
-    const val PLAYER_MIX = 1 // Stereo mixing
-    const val PLAYER_INTERP = 2 // Interpolation type
-    const val PLAYER_DSP = 3 // DSP effect flags
-    const val PLAYER_CFLAGS = 5 // Current module flags
-    const val PLAYER_VOLUME = 7 // Player volume (for audio focus duck)
-    const val PLAYER_DEFPAN = 10 // Default pan separation
+    /* player flags */
+    const val XMP_FLAGS_VBLANK = (1 shl 0)  /* Use vblank timing */
+    const val XMP_FLAGS_FX9BUG = (1 shl 1)  /* Emulate FX9 bug */
+    const val XMP_FLAGS_FIXLOOP = (1 shl 2) /* Emulate sample loop bug */
+    const val XMP_FLAGS_A500 = (1 shl 3)    /* Use Paula mixer in Amiga modules */
 
-    // Interpolation types
-    const val INTERP_NEAREST = 0 // Nearest neighbor
-    const val INTERP_LINEAR = 1 // Linear (default)
-    const val INTERP_SPLINE = 2 // Cubic spline
+    /* dsp effect types */
+    const val XMP_DSP_NONE = 0
+    const val XMP_DSP_LOWPASS = (1 shl 0)       /* Lowpass filter effect */
 
-    // Player flags
-    const val FLAGS_A500 = 1 shl 3
+    // Default Values
 
-    // DSP effect types
-    const val DSP_LOWPASS = 1 shl 0 // Lowpass filter effect
+    val volumeBoostRange = 0..3
+    val interpolationTypes = listOf(XMP_INTERP_NEAREST, XMP_INTERP_LINEAR, XMP_INTERP_SPLINE)
 
-    // Limits
-    const val MAX_CHANNELS = 64 // Max number of channels in module
-
-    const val MAX_BUFFERS = 256
-
-    // MAX_SEQUENCES from common.h
-    val maxSeqFromHeader: Int
-        get() = getMaxSequences()
+    const val DEFAULT_BUFFER_MS = 400
+    const val DEFAULT_SAMPLE_RATE = 44100
+    const val DEFAULT_PAN_SEPARATION = 50
+    const val DEFAULT_PLAYER_VOLUME = 100
+    const val DEFAULT_STEREO_MIX = 70
+    const val DEFAULT_VOLUME_BOOST = 1
+    const val DEFAULT_INTERPOLATION = XMP_INTERP_LINEAR
 
     init {
         System.loadLibrary("xmp-jni")

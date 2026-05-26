@@ -52,11 +52,11 @@ sealed class NavKeyMain(val title: String) : NavKey {
         override val unselectedIcon = Icons.Outlined.Download
     }
 
-    // @Serializable
-    // data object NowPlaying: NavKeyMain("Now Playing") {
-    //     override val selectedIcon = Icons.Filled.MusicNote
-    //     override val unselectedIcon = Icons.Outlined.MusicNote
-    // }
+    @Serializable
+    data object Settings : NavKeyMain("Settings") {
+        override val selectedIcon = Icons.Filled.Settings
+        override val unselectedIcon = Icons.Outlined.Settings
+    }
 }
 
 sealed interface NavKeyDownload : NavKey {
@@ -67,4 +67,12 @@ sealed interface NavKeyDownload : NavKey {
     @Serializable data class SearchResult(val query: String, val type: SearchType) : NavKeyDownload
 
     @Serializable data class Module(val moduleId: Int) : NavKeyDownload
+}
+
+sealed interface NavKeyPreferences : NavKey {
+    @Serializable data object Preferences : NavKeyPreferences
+
+    @Serializable data object About : NavKeyPreferences
+
+    @Serializable data object Formats : NavKeyPreferences
 }

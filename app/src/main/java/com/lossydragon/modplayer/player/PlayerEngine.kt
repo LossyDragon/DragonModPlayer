@@ -1,12 +1,19 @@
 package com.lossydragon.modplayer.player
 
 import android.content.Context
+import com.lossydragon.modplayer.db.AppPreferences
 import com.lossydragon.modplayer.model.ModuleFile
 import com.lossydragon.modplayer.player.model.ChannelSnapshot
 import com.lossydragon.modplayer.player.model.FrameSnapshot
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import org.helllabs.libxmp.Xmp
 import org.helllabs.libxmp.model.ChannelInfo
 import org.helllabs.libxmp.model.FrameInfo
@@ -14,14 +21,12 @@ import org.helllabs.libxmp.model.ModInfo
 import org.helllabs.libxmp.model.ModVars
 import timber.log.Timber
 
-class PlayerEngine(private val context: Context) {
-
-    // TODO user preferences
-    companion object {
-        const val SAMPLE_RATE = 44100
-        private const val BUFFER_MS = 200
-        private const val CHANNELS = Xmp.MAX_CHANNELS
-    }
+class PlayerEngine(
+    private val context: Context,
+    prefs: AppPreferences
+) {
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    private var renderThread: Thread? = null
 
     val frameFlow: StateFlow<FrameSnapshot?>
         field = MutableStateFlow<FrameSnapshot?>(null)
@@ -38,12 +43,26 @@ class PlayerEngine(private val context: Context) {
     val currentSequenceFlow: StateFlow<Int>
         field = MutableStateFlow(0)
 
-    @Volatile
-    private var paused = false
+    private val modVars = ModVars()
+    private val frameInfo = FrameInfo()
+    private val channelInfo = ChannelInfo()
+    private var currentSequence = 0
+
+    var playAllSequences = false
+
+    val numPatterns: Int
+        get() = modVars.numPatterns
+    val numChannels: Int
+        get() = modVars.numChannels
+    val numInstruments: Int
+        get() = modVars.numInstruments
+    val numSamples: Int
+        get() = modVars.numSamples
+    val numSequences: Int
+        get() = modVars.numSequence
 
     @Volatile
-    var stopRequest = false
-        private set
+    private var paused = false
 
     @Volatile
     private var initialized = false
@@ -52,20 +71,49 @@ class PlayerEngine(private val context: Context) {
     var endedNaturally: Boolean = false
         private set
 
-    private var renderThread: Thread? = null
+    @Volatile
+    var stopRequest = false
+        private set
 
-    private val modVars = ModVars()
-    private val frameInfo = FrameInfo()
-    private val channelInfo = ChannelInfo()
+    // Xmp Defaults
+    @Volatile
+    private var sampleRate: Int = Xmp.DEFAULT_SAMPLE_RATE
 
-    var playAllSequences = false
-    private var currentSequence = 0
+    @Volatile
+    private var bufferMs: Int = Xmp.DEFAULT_BUFFER_MS
 
-    val numPatterns: Int get() = modVars.numPatterns
-    val numChannels: Int get() = modVars.numChannels
-    val numInstruments: Int get() = modVars.numInstruments
-    val numSamples: Int get() = modVars.numSamples
-    val numSequences: Int get() = modVars.numSequence
+    @Volatile
+    private var defaultPan: Int = Xmp.DEFAULT_PAN_SEPARATION
+
+    @Volatile
+    private var volumeBoost: Int = Xmp.DEFAULT_VOLUME_BOOST
+
+    @Volatile
+    private var stereoMix: Int = Xmp.DEFAULT_STEREO_MIX
+
+    @Volatile
+    private var dspEffect: Int = Xmp.XMP_DSP_LOWPASS
+
+    @Volatile
+    private var playerVolume = Xmp.DEFAULT_PLAYER_VOLUME
+
+    @Volatile
+    private var interpolationType = Xmp.DEFAULT_INTERPOLATION
+
+    @Volatile
+    private var playerFlags: Int = 0
+
+    init {
+        prefs.getSampleRateFlow().onEach { sampleRate = it }.launchIn(scope)
+        prefs.getBufferMsFlow().onEach { bufferMs = it }.launchIn(scope)
+        prefs.getDefaultPanFlow().onEach { defaultPan = it }.launchIn(scope)
+        prefs.getVolumeBoostFlow().onEach { volumeBoost = it }.launchIn(scope)
+        prefs.getStereoMixFlow().onEach { stereoMix = it }.launchIn(scope)
+        prefs.getDspEffectFlow().onEach { dspEffect = it }.launchIn(scope)
+        prefs.getPlayerVolumeFlow().onEach { playerVolume = it }.launchIn(scope)
+        prefs.getInterpolationTypeFlow().onEach { interpolationType = it }.launchIn(scope)
+        prefs.getPlayerFlagsFlow().onEach { playerFlags = it }.launchIn(scope)
+    }
 
     /** Switches to sequence [index]. Updates duration and resets position. Returns false if invalid. */
     fun setSequence(index: Int): Boolean {
@@ -94,12 +142,15 @@ class PlayerEngine(private val context: Context) {
             softStop()
             Xmp.releaseModule()
         } else {
-            if (!Xmp.init(SAMPLE_RATE, BUFFER_MS)) {
+            if (!Xmp.init(sampleRate, bufferMs)) {
                 Timber.e("Xmp.init() failed")
                 return false
             }
             initialized = true
         }
+
+        val preLoadMask = Xmp.XMP_FLAGS_VBLANK or Xmp.XMP_FLAGS_FX9BUG or Xmp.XMP_FLAGS_FIXLOOP
+        Xmp.setPlayer(Xmp.XMP_PLAYER_FLAGS, playerFlags and preLoadMask)
 
         val modInfo = ModInfo()
         val result = Xmp.loadFromFd(context, file.uri, modInfo)
@@ -159,21 +210,32 @@ class PlayerEngine(private val context: Context) {
         stopRequest = false
         paused = false
 
-        if (Xmp.startPlayer(SAMPLE_RATE) != 0) {
+        Timber.i("Set default pan to $defaultPan")
+        Xmp.setPlayer(Xmp.XMP_PLAYER_DEFPAN, defaultPan)
+
+        if (Xmp.startPlayer(sampleRate) != 0) {
             Timber.e("Xmp.startPlayer() failed")
             return
         }
 
         // Unmute all channels
-        for (i in 0 until Xmp.MAX_CHANNELS) {
+        for (i in 0 until 64) {
             Xmp.mute(i, 0)
         }
 
-        Xmp.setPlayer(Xmp.PLAYER_AMP, 2)
-        Xmp.setPlayer(Xmp.PLAYER_INTERP, Xmp.INTERP_LINEAR)
-        Xmp.setPlayer(Xmp.PLAYER_DSP, Xmp.DSP_LOWPASS)
-        Xmp.setPlayer(Xmp.PLAYER_MIX, 70)
-        Xmp.setPlayer(Xmp.PLAYER_VOLUME, 100)
+        val cflags = Xmp.getPlayer(Xmp.XMP_PLAYER_CFLAGS)
+        val newCflags = if ((playerFlags and Xmp.XMP_FLAGS_A500) != 0) {
+            cflags or Xmp.XMP_FLAGS_A500
+        } else {
+            cflags and Xmp.XMP_FLAGS_A500.inv()
+        }
+
+        Xmp.setPlayer(Xmp.XMP_PLAYER_AMP, volumeBoost)
+        Xmp.setPlayer(Xmp.XMP_PLAYER_CFLAGS, newCflags)
+        Xmp.setPlayer(Xmp.XMP_PLAYER_DSP, dspEffect)
+        Xmp.setPlayer(Xmp.XMP_PLAYER_INTERP, interpolationType)
+        Xmp.setPlayer(Xmp.XMP_PLAYER_MIX, stereoMix)
+        Xmp.setPlayer(Xmp.XMP_PLAYER_VOLUME, playerVolume)
 
         var prefillCount = 0
         while (Xmp.hasFreeBuffer() && prefillCount++ < 100) {
@@ -183,7 +245,7 @@ class PlayerEngine(private val context: Context) {
         Xmp.playAudio()
         isPlaying.value = true
 
-        renderThread = Thread(::renderLoop, "DragonRenderThread").also {
+        renderThread = Thread(::renderLoop, "ModPlayerThread").also {
             it.priority = Thread.MAX_PRIORITY
             it.start()
         }
@@ -233,6 +295,8 @@ class PlayerEngine(private val context: Context) {
             initialized = false
         }
 
+        scope.cancel()
+
         isPlaying.value = false
         positionMs.value = 0L
         frameFlow.value = null
@@ -268,11 +332,10 @@ class PlayerEngine(private val context: Context) {
                 val endReached = Xmp.fillBuffer(false) < 0
 
                 Xmp.getInfo(frameInfo)
-                // Xmp.getModVars(modVars)
                 Xmp.getChannelData(channelInfo)
 
                 val timeMs = Xmp.time()
-                val numCh = modVars.numChannels.coerceIn(0, CHANNELS)
+                val numCh = modVars.numChannels.coerceIn(0, 64)
 
                 frameFlow.value = FrameSnapshot(
                     position = frameInfo.pos,

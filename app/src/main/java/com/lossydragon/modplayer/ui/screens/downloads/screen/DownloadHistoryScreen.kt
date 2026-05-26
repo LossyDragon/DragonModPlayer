@@ -3,7 +3,6 @@ package com.lossydragon.modplayer.ui.screens.downloads.screen
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.material.icons.*
-import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,6 +12,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lossydragon.modplayer.model.Artist
 import com.lossydragon.modplayer.model.ArtistInfo
 import com.lossydragon.modplayer.model.Module
+import com.lossydragon.modplayer.ui.components.BackButton
 import com.lossydragon.modplayer.ui.components.MessageBox
 import com.lossydragon.modplayer.ui.screens.downloads.components.ModuleListItem
 import com.lossydragon.modplayer.ui.screens.downloads.viewmodel.DownloadHistoryViewModel
@@ -76,19 +76,9 @@ private fun DownloadHistoryContent(
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = { Text(text = "History") },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBack,
-                        content = {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = null
-                            )
-                        }
-                    )
-                },
+                navigationIcon = { BackButton(onBack = onBack) },
                 actions = {
                     if (history.isNotEmpty()) {
                         IconButton(

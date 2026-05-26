@@ -18,6 +18,7 @@ import com.lossydragon.modplayer.model.DownloadStatus
 import com.lossydragon.modplayer.model.Module
 import com.lossydragon.modplayer.model.ModuleResult
 import com.lossydragon.modplayer.model.ModuleResultState
+import com.lossydragon.modplayer.ui.components.BackButton
 import com.lossydragon.modplayer.ui.components.MessageBox
 import com.lossydragon.modplayer.ui.components.ProgressbarIndicator
 import com.lossydragon.modplayer.ui.screens.downloads.components.ModuleDetailLayout
@@ -95,7 +96,7 @@ private fun DownloadModuleContent(
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = {
                     Text(
                         text = if (state.isRandom) "Random Module" else "Module Details",
@@ -103,17 +104,7 @@ private fun DownloadModuleContent(
                         overflow = TextOverflow.Ellipsis,
                     )
                 },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBack,
-                        content = {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = null
-                            )
-                        }
-                    )
-                },
+                navigationIcon = { BackButton(onBack = onBack) },
                 actions = {
                     if (state.moduleExists) {
                         IconButton(

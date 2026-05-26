@@ -66,7 +66,7 @@ val appModule = module {
     single { ModArchiveService(get()) }
 
     // Media Player
-    single { PlayerEngine(androidContext()) }
+    single { PlayerEngine(androidContext(), get()) }
     single { ModPlayer(androidContext(), get(), get()) }
     single { AppPreferences(androidContext()) }
 }

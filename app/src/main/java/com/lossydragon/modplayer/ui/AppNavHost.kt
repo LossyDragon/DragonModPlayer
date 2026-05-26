@@ -29,9 +29,7 @@ fun AppNavHost(onBack: () -> Unit) {
                 )
             }
             entry<NavKeyRoot.Player> {
-                PlayerScreen(
-                    onBack = rootBackStack::removeLastOrNull
-                )
+                PlayerScreen(onBack = rootBackStack::removeLastOrNull)
             }
         }
     )

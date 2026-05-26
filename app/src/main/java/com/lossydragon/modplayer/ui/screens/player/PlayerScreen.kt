@@ -26,6 +26,7 @@ import com.lossydragon.modplayer.model.PlayerUiState
 import com.lossydragon.modplayer.player.PlayerViewModel
 import com.lossydragon.modplayer.player.model.ChannelSnapshot
 import com.lossydragon.modplayer.player.model.FrameSnapshot
+import com.lossydragon.modplayer.ui.components.BackButton
 import com.lossydragon.modplayer.ui.screens.player.components.ChannelMeterGrid
 import com.lossydragon.modplayer.ui.screens.player.components.ChipList
 import com.lossydragon.modplayer.ui.screens.player.components.DurationsSheet
@@ -288,17 +289,7 @@ private fun PlayerScreenContent(
                         }
                     )
                 },
-                navigationIcon = {
-                    IconButton(
-                        onClick = { onAction(PlayerAction.OnBack) },
-                        content = {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = null
-                            )
-                        }
-                    )
-                },
+                navigationIcon = { BackButton(onBack = { onAction(PlayerAction.OnBack) }) },
                 actions = {
                     Spacer(modifier = Modifier.size(48.dp))
                 }

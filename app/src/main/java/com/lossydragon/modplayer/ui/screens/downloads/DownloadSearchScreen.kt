@@ -4,7 +4,6 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.*
 import androidx.compose.material.icons.*
-import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,6 +15,7 @@ import androidx.compose.ui.text.input.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import com.lossydragon.modplayer.model.SearchType
+import com.lossydragon.modplayer.ui.components.BackButton
 import com.lossydragon.modplayer.ui.theme.AppTheme
 import com.lossydragon.modplayer.ui.util.annotatedLinkString
 import kotlin.time.Duration.Companion.milliseconds
@@ -49,19 +49,9 @@ fun DownloadSearchScreen(
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = { Text(text = "Search") },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBack,
-                        content = {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = null
-                            )
-                        }
-                    )
-                }
+                navigationIcon = { BackButton(onBack = onBack) }
             )
         },
         floatingActionButton = {

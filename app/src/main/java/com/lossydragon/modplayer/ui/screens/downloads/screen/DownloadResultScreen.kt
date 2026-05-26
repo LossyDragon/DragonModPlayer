@@ -20,6 +20,7 @@ import com.lossydragon.modplayer.model.SearchListResult
 import com.lossydragon.modplayer.model.SearchResult
 import com.lossydragon.modplayer.model.SearchType
 import com.lossydragon.modplayer.model.Sponsor
+import com.lossydragon.modplayer.ui.components.BackButton
 import com.lossydragon.modplayer.ui.components.MessageBox
 import com.lossydragon.modplayer.ui.components.ProgressbarIndicator
 import com.lossydragon.modplayer.ui.screens.downloads.components.ArtistListItem
@@ -68,7 +69,7 @@ private fun DownloadScreenContent(
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = {
                     Text(
                         text = state.title.ifBlank { "Results" },
@@ -76,17 +77,7 @@ private fun DownloadScreenContent(
                         overflow = TextOverflow.Ellipsis
                     )
                 },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBack,
-                        content = {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = null
-                            )
-                        }
-                    )
-                }
+                navigationIcon = { BackButton(onBack = onBack) },
             )
         }
     ) { padding ->

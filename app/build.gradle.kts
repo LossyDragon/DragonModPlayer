@@ -94,4 +94,7 @@ dependencies {
     implementation(libs.bundles.ktor)
     implementation(libs.datastore.preferences)
     implementation(libs.kotlinx.serialization.json)
+
+    implementation("com.github.alorma.compose-settings:ui-tiles-expressive:3.1.0")
+
 }

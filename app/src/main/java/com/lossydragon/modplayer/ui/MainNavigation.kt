@@ -14,6 +14,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.lossydragon.modplayer.di.appModule
+import com.lossydragon.modplayer.ui.preferences.NavPreferences
 import com.lossydragon.modplayer.ui.screens.browser.FileBrowserScreen
 import com.lossydragon.modplayer.ui.screens.downloads.NavDownloads
 import com.lossydragon.modplayer.ui.screens.playlists.NavPlaylists
@@ -26,6 +27,7 @@ private val bottomBarItems = persistentListOf(
     NavKeyMain.Browser,
     NavKeyMain.Playlists,
     NavKeyMain.Downloads,
+    NavKeyMain.Settings,
 )
 
 @Composable
@@ -115,12 +117,17 @@ fun MainNavigation(
                         onNavigateToPlayer = onNavigateToPlayer,
                     )
                 }
-                // entry<NavKeyMain.NowPlaying> {
-                //     PlayerScreen(
-                //         modifier = Modifier.consumeWindowInsets(padding),
-                //         onBack = { /* no back from now playing tab */ },
-                //     )
-                // }
+                entry<NavKeyMain.Settings> {
+                    NavPreferences(
+                        modifier = Modifier.consumeWindowInsets(padding),
+                        snackbarHostState = snackBarHostState,
+                        onBack = {
+                            mainBackStack.removeAt(mainBackStack.lastIndex)
+                            mainBackStack.add(NavKeyMain.Browser)
+                            currentTab = NavKeyMain.Browser
+                        },
+                    )
+                }
             }
         )
     }

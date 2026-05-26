@@ -62,6 +62,7 @@ import com.lossydragon.modplayer.model.PlaybackStatus
 import com.lossydragon.modplayer.model.PlayerUiState
 import com.lossydragon.modplayer.player.PlayerViewModel
 import com.lossydragon.modplayer.ui.NavKeyPlaylists
+import com.lossydragon.modplayer.ui.components.BackButton
 import com.lossydragon.modplayer.ui.components.MessageBox
 import com.lossydragon.modplayer.ui.components.ProgressbarIndicator
 import com.lossydragon.modplayer.ui.screens.player.components.MiniPlayerBar
@@ -294,17 +295,7 @@ private fun PlaylistListScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(text = "Playlists") },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBack,
-                        content = {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = null
-                            )
-                        }
-                    )
-                },
+                navigationIcon = { BackButton(onBack = onBack) },
             )
         },
         floatingActionButton = {
@@ -435,13 +426,9 @@ private fun PlaylistEntriesScreen(
         modifier = modifier,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = { Text(playlistName) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
-                    }
-                },
+                navigationIcon = { BackButton(onBack = onBack) },
             )
         },
         floatingActionButton = {
