@@ -119,6 +119,10 @@ jobs:
           echo "::add-mask::$KEYSTORE_BASE64"
           echo "$KEYSTORE_BASE64" | base64 --decode > "${{ runner.temp }}/release.jks"
 
+      # I'm a Windows user, okay!
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
       - name: Build release APK
         env:
           ORG_GRADLE_PROJECT_modArchiveApiKey: ${{ secrets.MOD_ARCHIVE_API_KEY }}
