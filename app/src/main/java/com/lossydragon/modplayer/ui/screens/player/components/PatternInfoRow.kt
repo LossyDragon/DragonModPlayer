@@ -14,8 +14,8 @@ import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun PatternInfoRow(
-    modifier: Modifier = Modifier,
-    frame: FrameSnapshot
+    frame: FrameSnapshot,
+    modifier: Modifier = Modifier
 ) {
     Row(
         modifier = modifier

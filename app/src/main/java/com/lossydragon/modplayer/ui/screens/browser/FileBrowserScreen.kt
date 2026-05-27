@@ -43,8 +43,8 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun FileBrowserScreen(
-    modifier: Modifier = Modifier,
     onNavigateToPlayer: () -> Unit,
+    modifier: Modifier = Modifier,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -127,7 +127,6 @@ fun FileBrowserScreen(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun FileBrowserScreenContent(
-    modifier: Modifier = Modifier,
     browserState: BrowserUiState,
     playerState: PlayerUiState,
     filterQuery: String,
@@ -147,6 +146,7 @@ private fun FileBrowserScreenContent(
     onMiniPlayerTap: () -> Unit,
     onMiniPlayerToggle: () -> Unit,
     onMiniPlayerNext: () -> Unit,
+    modifier: Modifier = Modifier,
     onMiniPlayerPrev: () -> Unit
 ) {
     val searchBarState = rememberSearchBarWithGapState()

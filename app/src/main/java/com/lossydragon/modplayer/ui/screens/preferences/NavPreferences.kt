@@ -17,8 +17,8 @@ import org.helllabs.libxmp.Xmp
 
 @Composable
 fun NavPreferences(
-    modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState,
+    modifier: Modifier = Modifier,
     onBack: () -> Unit
 ) {
     val backStack = rememberNavBackStack(NavKeyPreferences.Preferences)

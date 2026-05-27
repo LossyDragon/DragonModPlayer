@@ -26,8 +26,8 @@ import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 internal fun BreadCrumbs(
-    modifier: Modifier = Modifier,
     breadcrumbs: ImmutableList<String>,
+    modifier: Modifier = Modifier,
     onCrumbClick: (Int) -> Unit
 ) {
     val scrollState = rememberLazyListState()

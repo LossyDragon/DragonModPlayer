@@ -26,8 +26,8 @@ import kotlinx.coroutines.launch
 
 @Composable
 internal fun ModuleDetailLayout(
-    modifier: Modifier = Modifier,
-    moduleResult: ModuleResult
+    moduleResult: ModuleResult,
+    modifier: Modifier = Modifier
 ) {
     val expandTextColor = MaterialTheme.colorScheme.primary
 

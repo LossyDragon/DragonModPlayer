@@ -31,12 +31,11 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 internal fun DownloadResultScreen(
-    modifier: Modifier = Modifier,
     searchType: SearchType,
     query: String,
     onBack: () -> Unit,
+    modifier: Modifier = Modifier,
     onModuleClick: (Int) -> Unit
-
 ) {
     val viewModel = koinViewModel<DownloadViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -60,10 +59,10 @@ internal fun DownloadResultScreen(
 
 @Composable
 private fun DownloadScreenContent(
-    modifier: Modifier = Modifier,
     state: DownloadSearchState,
     onBack: () -> Unit,
     onModuleClick: (Int) -> Unit,
+    modifier: Modifier = Modifier,
     onArtistClick: (Int) -> Unit
 ) {
     Scaffold(

@@ -29,9 +29,9 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 internal fun DownloadModuleScreen(
-    modifier: Modifier = Modifier,
     moduleId: Int,
     onBack: () -> Unit,
+    modifier: Modifier = Modifier,
     onPlay: (Module) -> Unit
 ) {
     val viewModel = koinViewModel<ModuleResultViewModel>()
@@ -85,12 +85,12 @@ internal fun DownloadModuleScreen(
 
 @Composable
 private fun DownloadModuleContent(
-    modifier: Modifier = Modifier,
     state: ModuleResultState,
     onBack: () -> Unit,
     onShowDialog: (Boolean) -> Unit,
     onDownloadModule: (Module) -> Unit,
     onRandomModule: () -> Unit,
+    modifier: Modifier = Modifier,
     onPlay: (Module) -> Unit
 ) {
     Scaffold(

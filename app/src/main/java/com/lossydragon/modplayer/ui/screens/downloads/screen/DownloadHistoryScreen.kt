@@ -23,8 +23,8 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 internal fun DownloadHistoryScreen(
-    modifier: Modifier = Modifier,
     onBack: () -> Unit,
+    modifier: Modifier = Modifier,
     onModuleClick: (Int) -> Unit
 ) {
     val viewModel = koinViewModel<DownloadHistoryViewModel>()
@@ -67,10 +67,10 @@ internal fun DownloadHistoryScreen(
 
 @Composable
 private fun DownloadHistoryContent(
-    modifier: Modifier = Modifier,
     history: ImmutableList<Module>,
     onBack: () -> Unit,
     onModuleClick: (Int) -> Unit,
+    modifier: Modifier = Modifier,
     onShowDialog: (Boolean) -> Unit
 ) {
     Scaffold(

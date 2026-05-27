@@ -30,9 +30,9 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun NavDownloads(
-    modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState,
     onBack: () -> Unit,
+    modifier: Modifier = Modifier,
     onNavigateToPlayer: () -> Unit
 ) {
     val viewModel: PlayerViewModel = koinViewModel(

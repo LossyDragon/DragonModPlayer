@@ -20,8 +20,8 @@ import kotlinx.collections.immutable.toImmutableList
 @Suppress("ParamsComparedByRef")
 @Composable
 fun ChannelMeterGrid(
-    modifier: Modifier = Modifier,
-    channels: ImmutableList<ChannelSnapshot>
+    channels: ImmutableList<ChannelSnapshot>,
+    modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
@@ -71,12 +71,7 @@ fun ChannelMeterGrid(
 }
 
 @Composable
-private fun ChannelMeter(
-    index: Int,
-    channel: ChannelSnapshot,
-    width: Dp = 24.dp,
-    height: Dp
-) {
+private fun ChannelMeter(index: Int, channel: ChannelSnapshot, height: Dp, width: Dp = 24.dp) {
     val volFraction = (channel.volume / 64f).coerceIn(0f, 1f)
     val finalVolFraction = (channel.finalVol / 64f).coerceIn(0f, 1f)
 

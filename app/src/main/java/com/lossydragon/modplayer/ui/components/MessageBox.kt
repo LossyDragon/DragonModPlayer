@@ -16,10 +16,10 @@ import com.lossydragon.modplayer.ui.theme.AppTheme
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MessageBox(
+    text: String,
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
     title: String? = null,
-    text: String,
     actions: (@Composable RowScope.() -> Unit)? = null
 ) {
     Box(

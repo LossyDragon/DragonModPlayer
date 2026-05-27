@@ -22,10 +22,10 @@ import org.koin.compose.koinInject
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun PreferencesScreen(
-    modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState,
     onBack: () -> Unit,
     onFormats: () -> Unit,
+    modifier: Modifier = Modifier,
     onAbout: () -> Unit
 ) {
     val scope = rememberCoroutineScope()

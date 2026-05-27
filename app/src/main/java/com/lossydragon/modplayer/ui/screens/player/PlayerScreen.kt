@@ -239,13 +239,13 @@ fun PlayerScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PlayerScreenContent(
-    modifier: Modifier = Modifier,
     snackBarHostState: SnackbarHostState,
     state: PlayerUiState,
     queueSheetState: SheetState,
     durationsSheetState: SheetState,
     showQueue: Boolean,
     showDurations: Boolean,
+    modifier: Modifier = Modifier,
     onAction: (PlayerAction) -> Unit
 ) {
     if (state.currentModule == null) {

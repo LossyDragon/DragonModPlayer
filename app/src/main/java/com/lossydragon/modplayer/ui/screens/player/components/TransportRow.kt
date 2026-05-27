@@ -16,7 +16,6 @@ import com.lossydragon.modplayer.ui.theme.AppTheme
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun TransportRow(
-    modifier: Modifier = Modifier,
     status: PlaybackStatus,
     hasNext: Boolean,
     hasPrev: Boolean,
@@ -24,6 +23,7 @@ internal fun TransportRow(
     onPrev: () -> Unit,
     onPlayPause: () -> Unit,
     onNext: () -> Unit,
+    modifier: Modifier = Modifier,
     onQueueSheet: () -> Unit
 ) {
     Row(

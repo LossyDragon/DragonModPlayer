@@ -13,10 +13,10 @@ import kotlinx.collections.immutable.ImmutableList
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun PreferencesFormats(
-    modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState,
     onBack: () -> Unit,
     formatList: ImmutableList<String>,
+    modifier: Modifier = Modifier,
     onClick: (String) -> Unit
 ) {
     val listState = rememberLazyListState()

@@ -81,9 +81,9 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @Composable
 fun NavPlaylists(
-    modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState,
     onBack: () -> Unit,
+    modifier: Modifier = Modifier,
     onNavigateToPlayer: () -> Unit
 ) {
     val playerViewModel = koinViewModel<PlayerViewModel>(
@@ -167,7 +167,7 @@ fun NavPlaylists(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun PlaylistListScreen(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     state: PlaylistsUiState,
     playerState: PlayerUiState,
     snackbarHostState: SnackbarHostState,
@@ -403,7 +403,7 @@ private fun PlaylistListScreen(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun PlaylistEntriesScreen(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     playlistName: String,
     state: PlaylistsUiState,
     playerState: PlayerUiState,

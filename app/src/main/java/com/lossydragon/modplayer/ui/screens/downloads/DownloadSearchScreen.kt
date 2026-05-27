@@ -25,12 +25,12 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun DownloadSearchScreen(
-    modifier: Modifier = Modifier,
     hasApiKey: Boolean,
     snackbarHostState: SnackbarHostState,
     onBack: () -> Unit,
     onSearch: (String, SearchType) -> Unit,
     onRandom: () -> Unit,
+    modifier: Modifier = Modifier,
     onHistory: () -> Unit
 ) {
     val focusRequester = remember { FocusRequester() }

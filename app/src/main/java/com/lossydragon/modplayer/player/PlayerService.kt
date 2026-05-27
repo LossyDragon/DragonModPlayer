@@ -21,11 +21,13 @@ import com.lossydragon.modplayer.MainActivity
 import com.lossydragon.modplayer.R
 import com.lossydragon.modplayer.core.AutoMediaId
 import com.lossydragon.modplayer.db.AppPreferences
+import com.lossydragon.modplayer.model.ModuleFile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
 import org.helllabs.libxmp.Xmp
 import org.helllabs.libxmp.model.ModInfo
 import org.koin.android.ext.android.inject
@@ -66,8 +68,9 @@ class PlayerService : MediaLibraryService() {
             session: MediaLibrarySession,
             browser: MediaSession.ControllerInfo,
             params: LibraryParams?
-        ): ListenableFuture<LibraryResult<MediaItem>> =
-            Futures.immediateFuture(
+        ): ListenableFuture<LibraryResult<MediaItem>> {
+            Timber.d("onGetLibraryRoot: browser=${browser.packageName}")
+            return Futures.immediateFuture(
                 LibraryResult.ofItem(
                     buildBrowsableItem(
                         id = AutoMediaId.ROOT,
@@ -77,6 +80,7 @@ class PlayerService : MediaLibraryService() {
                     params,
                 )
             )
+        }
 
         override fun onGetChildren(
             session: MediaLibrarySession,
@@ -86,6 +90,7 @@ class PlayerService : MediaLibraryService() {
             pageSize: Int,
             params: LibraryParams?
         ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
+            Timber.d("onGetChildren: parentId=$parentId page=$page")
             val items = when {
                 parentId == AutoMediaId.ROOT -> getRootChildren()
                 parentId == AutoMediaId.FILE_BROWSER -> getFileBrowserRoot()
@@ -101,6 +106,12 @@ class PlayerService : MediaLibraryService() {
             controller: MediaSession.ControllerInfo,
             mediaItems: List<MediaItem>
         ): ListenableFuture<List<MediaItem>> {
+            Timber.d(
+                "onAddMediaItems: count=${mediaItems.size} ids=${mediaItems.map {
+                    it.mediaId
+                }}"
+            )
+
             val resolved = mediaItems.map { item ->
                 val uri = when {
                     AutoMediaId.isFile(
@@ -116,12 +127,75 @@ class PlayerService : MediaLibraryService() {
             return Futures.immediateFuture(resolved)
         }
 
+        override fun onSearch(
+            session: MediaLibrarySession,
+            browser: MediaSession.ControllerInfo,
+            query: String,
+            params: LibraryParams?
+        ): ListenableFuture<LibraryResult<Void>> {
+            Timber.d("onSearch: query='$query' from=${browser.packageName}")
+            // Search through queue / playlists / files matching query
+            // Notify that results are ready (per Media3 spec)
+            session.notifySearchResultChanged(browser, query, /* itemCount */ 0, params)
+            return Futures.immediateFuture(LibraryResult.ofVoid())
+        }
+
+        override fun onGetSearchResult(
+            session: MediaLibrarySession,
+            browser: MediaSession.ControllerInfo,
+            query: String,
+            page: Int,
+            pageSize: Int,
+            params: LibraryParams?
+        ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
+            Timber.d("onGetSearchResult: query='$query' page=$page")
+            // Search through queue / playlists / files matching query
+            val results = ImmutableList.of<MediaItem>() // implement when ready
+            return Futures.immediateFuture(LibraryResult.ofItemList(results, params))
+        }
+
         override fun onPlaybackResumption(
             mediaSession: MediaSession,
             controller: MediaSession.ControllerInfo,
             isForPlayback: Boolean
-        ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> =
-            Futures.immediateFailedFuture(UnsupportedOperationException())
+        ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
+            Timber.d("onPlaybackResumption: isForPlayback=$isForPlayback")
+
+            val state = runBlocking { prefs.getQueueState() }
+                ?: return Futures.immediateFailedFuture(UnsupportedOperationException())
+
+            val files = try {
+                Json.decodeFromString<List<ModuleFile>>(state.json)
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to decode queue for resumption")
+                return Futures.immediateFailedFuture(e)
+            }
+            if (files.isEmpty()) {
+                return Futures.immediateFailedFuture(UnsupportedOperationException())
+            }
+
+            val mediaItems = files.map { file ->
+                MediaItem.Builder()
+                    .setUri(file.uri)
+                    .setMediaId(file.uri.toString())
+                    .setMediaMetadata(
+                        MediaMetadata.Builder()
+                            .setTitle(file.name)
+                            .setIsPlayable(true)
+                            .setArtworkUri(artworkUri)
+                            .build()
+                    )
+                    .build()
+            }
+
+            return Futures.immediateFuture(
+                MediaSession.MediaItemsWithStartPosition(
+                    mediaItems,
+                    state.index,
+                    state.positionMs,
+                )
+            )
+        }
     }
 
     override fun onCreate() {
