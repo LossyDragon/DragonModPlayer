@@ -239,4 +239,6 @@ class PlayerViewModel(
     fun closeModComment() = state.update { it.copy(songMessage = "") }
 
     suspend fun getLastDirectoryUri(): String? = prefs.getLastDirectoryUri()
+
+    fun getPatternData(patternIndex: Int) = player.getPatternData(patternIndex)
 }

@@ -944,6 +944,17 @@ JNIEXPORT void JNICALL JNI_FUNCTION(getChannelData)(JNIEnv* env, jobject obj, jo
   env->SetIntArrayRegion(holdVols, 0, chn, hold_vol.data());
 }
 
+JNIEXPORT jint JNICALL JNI_FUNCTION(getPatternRows)(JNIEnv* env, jobject obj, jint pat) {
+    XmpPlayerState& state = XmpPlayerState::instance();
+    if (!state.isModuleLoaded()) return 0;
+
+    const xmp_module_info& mi = state.getModuleInfo();
+    if (pat < 0 || pat >= mi.mod->pat) return 0;
+
+    const xmp_pattern* xxp = mi.mod->xxp[pat];
+    return xxp ? xxp->rows : 0;
+}
+
 JNIEXPORT void JNICALL JNI_FUNCTION(getPatternRow)(JNIEnv* env, jobject obj, jint pat, jint row, jbyteArray rowNotes, jbyteArray rowInstruments, jbyteArray rowFxType, jbyteArray rowFxParm) {
   XmpPlayerState& state = XmpPlayerState::instance();
 

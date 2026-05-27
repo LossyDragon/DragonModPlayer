@@ -26,11 +26,13 @@ import com.lossydragon.modplayer.model.PlayerUiState
 import com.lossydragon.modplayer.player.PlayerViewModel
 import com.lossydragon.modplayer.player.model.ChannelSnapshot
 import com.lossydragon.modplayer.player.model.FrameSnapshot
+import com.lossydragon.modplayer.player.model.PatternData
+import com.lossydragon.modplayer.player.model.emptyPatternData
 import com.lossydragon.modplayer.ui.components.BackButton
-import com.lossydragon.modplayer.ui.screens.player.components.ChannelMeterGrid
 import com.lossydragon.modplayer.ui.screens.player.components.ChipList
 import com.lossydragon.modplayer.ui.screens.player.components.DurationsSheet
 import com.lossydragon.modplayer.ui.screens.player.components.PatternInfoRow
+import com.lossydragon.modplayer.ui.screens.player.components.PatternView
 import com.lossydragon.modplayer.ui.screens.player.components.PlaybackProgress
 import com.lossydragon.modplayer.ui.screens.player.components.PlayerBottomAppBar
 import com.lossydragon.modplayer.ui.screens.player.components.QueueSheet
@@ -92,6 +94,15 @@ fun PlayerScreen(
     var showAudioInfo by remember { mutableStateOf(false) }
     var audioInfoText by remember { mutableStateOf("") }
     var showModInfo by remember { mutableStateOf(false) }
+
+    val patternIndex = state.frame?.pattern ?: -1
+    val patternData = remember(patternIndex, state.numChannels) {
+        if (patternIndex < 0 || state.numChannels == 0) {
+            emptyPatternData()
+        } else {
+            viewModel.getPatternData(patternIndex)
+        }
+    }
 
     LaunchedEffect(state.currentModule) {
         if (state.currentModule != null) hasLoadedOnce = true
@@ -170,6 +181,7 @@ fun PlayerScreen(
         modifier = modifier,
         snackBarHostState = snackBarHostState,
         state = state,
+        patternData = patternData,
         queueSheetState = queueSheetState,
         durationsSheetState = durationsSheetState,
         showQueue = showQueue,
@@ -241,6 +253,7 @@ fun PlayerScreen(
 private fun PlayerScreenContent(
     snackBarHostState: SnackbarHostState,
     state: PlayerUiState,
+    patternData: PatternData,
     queueSheetState: SheetState,
     durationsSheetState: SheetState,
     showQueue: Boolean,
@@ -341,11 +354,18 @@ private fun PlayerScreenContent(
         },
         content = { contentPadding ->
             state.frame?.let {
-                ChannelMeterGrid(
-                    modifier = Modifier
-                        .padding(contentPadding),
-                    channels = it.channels
+                PatternView(
+                    modifier = Modifier.fillMaxSize().padding(contentPadding),
+                    pattern = patternData,
+                    currentRow = state.frame.row,
                 )
+
+                // TODO add a tap to click to choose between current and future screens.
+                // ChannelMeterGrid(
+                //     modifier = Modifier
+                //         .padding(contentPadding),
+                //     channels = it.channels
+                // )
             }
 
             if (showDurations) {
@@ -481,6 +501,7 @@ private fun Preview(
         PlayerScreenContent(
             state = state,
             snackBarHostState = SnackbarHostState(),
+            patternData = emptyPatternData(),
             queueSheetState = queueSheetState,
             durationsSheetState = durationsSheetState,
             showQueue = showQueue,

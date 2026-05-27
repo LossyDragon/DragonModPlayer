@@ -586,13 +586,14 @@ class ModPlayer(
                 prefs.clearQueueState()
                 return@launch
             }
-            prefs.saveQueueState(
-                json = Json.encodeToString(originalQueue.toList()),
-                index = currentIndex,
-                shuffle = shuffleModeEnabled,
-                repeat = repeatMode,
-                positionMs = engine.positionMs.value,
-            )
+            // TODO fix
+            // prefs.saveQueueState(
+            //     json = Json.encodeToString(originalQueue.toList()),
+            //     index = currentIndex,
+            //     shuffle = shuffleModeEnabled,
+            //     repeat = repeatMode,
+            //     positionMs = engine.positionMs.value,
+            // )
         }
     }
 
@@ -620,6 +621,8 @@ class ModPlayer(
         invalidateState()
         return true
     }
+
+    fun getPatternData(patternIndex: Int) = engine.getPatternData(patternIndex)
 
     /** Builds a [androidx.media3.common.MediaItem] with placeholder metadata for initial queue population. */
     private fun ModuleFile.toMediaItem(): MediaItem =

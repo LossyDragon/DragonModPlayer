@@ -5,6 +5,9 @@ import com.lossydragon.modplayer.db.AppPreferences
 import com.lossydragon.modplayer.model.ModuleFile
 import com.lossydragon.modplayer.player.model.ChannelSnapshot
 import com.lossydragon.modplayer.player.model.FrameSnapshot
+import com.lossydragon.modplayer.player.model.NoteCell
+import com.lossydragon.modplayer.player.model.PatternData
+import com.lossydragon.modplayer.player.model.emptyPatternData
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -44,6 +47,7 @@ class PlayerEngine(
     val currentSequenceFlow: StateFlow<Int>
         field = MutableStateFlow(0)
 
+    private val patternCache = mutableMapOf<Int, PatternData>()
     private val modVars = ModVars()
     private val frameInfo = FrameInfo()
     private val channelInfo = ChannelInfo()
@@ -162,6 +166,8 @@ class PlayerEngine(
 
     /** Loads [file] into the engine. Returns false on failure. */
     fun load(file: ModuleFile): Boolean {
+        clearPatternCache()
+
         endedNaturally = false
         stopRequest = false
         currentSequence = 0
@@ -202,6 +208,8 @@ class PlayerEngine(
 
     /** Loads next [file] without tearing down audio. Use between tracks. */
     fun loadNext(file: ModuleFile): Boolean {
+        clearPatternCache()
+
         endedNaturally = false
         stopRequest = false
         currentSequence = 0
@@ -345,6 +353,36 @@ class PlayerEngine(
         positionMs.value = 0L
         frameFlow.value = null
     }
+
+    fun getPatternData(patternIndex: Int): PatternData =
+        patternCache.getOrPut(patternIndex) {
+            val numChannels = modVars.numChannels
+            val numRows = Xmp.getPatternRows(patternIndex)
+            if (numChannels == 0 || numRows == 0) {
+                return@getOrPut emptyPatternData()
+            }
+
+            val notes = ByteArray(64)
+            val ins = ByteArray(64)
+            val fxt = ByteArray(64)
+            val fxp = ByteArray(64)
+
+            val cells = Array(numRows) { row ->
+                Xmp.getPatternRow(patternIndex, row, notes, ins, fxt, fxp)
+                Array(numChannels) { ch ->
+                    NoteCell(
+                        note = notes[ch].toInt() and 0xFF,
+                        instrument = ins[ch].toInt() and 0xFF,
+                        fxType = fxt[ch].toInt(), // signed, -1 = empty
+                        fxParam = fxp[ch].toInt() and 0xFF,
+                    )
+                }.toList().toImmutableList()
+            }.toList().toImmutableList()
+
+            PatternData(patternIndex, numRows, numChannels, cells)
+        }
+
+    private fun clearPatternCache() = patternCache.clear()
 
     private fun renderLoop() {
         while (!stopRequest) {

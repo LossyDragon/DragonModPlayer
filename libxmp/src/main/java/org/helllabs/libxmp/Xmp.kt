@@ -163,6 +163,8 @@ object Xmp {
         rowFxParm: ByteArray
     )
 
+    external fun getPatternRows(pat: Int): Int
+
     external fun getSampleData(
         trigger: Boolean,
         ins: Int,
