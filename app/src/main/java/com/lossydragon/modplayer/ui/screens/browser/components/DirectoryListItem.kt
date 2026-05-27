@@ -7,7 +7,9 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.*
+import com.lossydragon.modplayer.R
 import com.lossydragon.modplayer.model.FileItem
 import com.lossydragon.modplayer.ui.theme.AppTheme
 
@@ -26,7 +28,12 @@ internal fun DirectoryListItem(
         ),
         modifier = Modifier.fillMaxWidth(),
         content = { Text(item.name) },
-        leadingContent = { Icon(imageVector = Icons.Default.Folder, contentDescription = null,) },
+        leadingContent = {
+            Icon(
+                imageVector = Icons.Default.Folder,
+                contentDescription = stringResource(R.string.desc_directory_item, item.name),
+            )
+        },
     )
 }
 

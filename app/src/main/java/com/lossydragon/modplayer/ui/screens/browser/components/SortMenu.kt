@@ -6,7 +6,9 @@ import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.lossydragon.modplayer.R
 import com.lossydragon.modplayer.model.BrowserSortOrder
 import com.lossydragon.modplayer.ui.theme.AppTheme
 
@@ -20,7 +22,10 @@ internal fun SortMenu(
         IconButton(
             onClick = { showSortMenu = true },
             content = {
-                Icon(imageVector = Icons.AutoMirrored.Filled.Sort, contentDescription = "Sort")
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Sort,
+                    contentDescription = stringResource(R.string.desk_sort_button)
+                )
             }
         )
         DropdownMenu(

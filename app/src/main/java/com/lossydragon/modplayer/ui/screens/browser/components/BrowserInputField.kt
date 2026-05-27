@@ -9,8 +9,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.*
+import com.lossydragon.modplayer.R
 import com.lossydragon.modplayer.model.BrowserSortOrder
+import com.lossydragon.modplayer.ui.components.BackButton
 import com.lossydragon.modplayer.ui.theme.AppTheme
 import kotlinx.coroutines.launch
 
@@ -36,21 +39,16 @@ internal fun BrowserInputField(
         placeholder = { Text("Search modules…") },
         leadingIcon = {
             if (searchBarState.currentValue == SearchBarValue.Expanded) {
-                IconButton(
-                    onClick = {
-                        scope.launch { searchBarState.animateToCollapsed() }
-                        textFieldState.clearText()
-                        onFilter("")
-                    },
-                    content = {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null
-                        )
-                    }
-                )
+                BackButton {
+                    scope.launch { searchBarState.animateToCollapsed() }
+                    textFieldState.clearText()
+                    onFilter("")
+                }
             } else {
-                Icon(imageVector = Icons.Default.Search, contentDescription = null)
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = stringResource(R.string.desc_search)
+                )
             }
         },
         trailingIcon = {
@@ -61,7 +59,10 @@ internal fun BrowserInputField(
                         onFilter("")
                     },
                     content = {
-                        Icon(imageVector = Icons.Default.Clear, contentDescription = null)
+                        Icon(
+                            imageVector = Icons.Default.Clear,
+                            contentDescription = stringResource(R.string.desc_search_clear)
+                        )
                     }
                 )
             } else {
@@ -69,7 +70,10 @@ internal fun BrowserInputField(
                     IconButton(
                         onClick = onFolderPick,
                         content = {
-                            Icon(imageVector = Icons.Default.FolderOpen, contentDescription = null)
+                            Icon(
+                                imageVector = Icons.Default.FolderOpen,
+                                contentDescription = stringResource(R.string.desc_folder_pick)
+                            )
                         }
                     )
                     SortMenu(sortOrder = sortOrder, onSortOrder = onSortOrder)

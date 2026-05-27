@@ -7,8 +7,10 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.*
 import androidx.compose.ui.tooling.preview.*
+import com.lossydragon.modplayer.R
 import com.lossydragon.modplayer.model.ModuleFile
 import com.lossydragon.modplayer.ui.theme.AppTheme
 
@@ -35,7 +37,12 @@ internal fun ModuleListItem(
             )
         },
         supportingContent = { Text(text = file.resolvedType.ifBlank { file.extension }) },
-        leadingContent = { Icon(imageVector = Icons.Default.AudioFile, contentDescription = null) },
+        leadingContent = {
+            Icon(
+                imageVector = Icons.Default.AudioFile,
+                contentDescription = stringResource(R.string.desc_module_item, file.resolvedName)
+            )
+        },
     )
 }
 

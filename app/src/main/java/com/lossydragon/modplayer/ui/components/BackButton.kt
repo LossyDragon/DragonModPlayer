@@ -5,6 +5,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.lossydragon.modplayer.R
 
 @Composable
 fun BackButton(onBack: () -> Unit) {
@@ -13,7 +15,7 @@ fun BackButton(onBack: () -> Unit) {
         content = {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = null
+                contentDescription = stringResource(R.string.desc_back_button)
             )
         }
     )

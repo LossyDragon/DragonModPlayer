@@ -18,9 +18,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.lossydragon.modplayer.R
 import com.lossydragon.modplayer.ui.theme.AppTheme
 
 @Composable
@@ -46,7 +48,7 @@ internal fun EmptyPrompt(padding: PaddingValues, onPick: () -> Unit) {
                             content = {
                                 Icon(
                                     imageVector = Icons.Default.FolderOpen,
-                                    contentDescription = null,
+                                    contentDescription = stringResource(R.string.desc_folder_pick),
                                     modifier = Modifier.size(72.dp),
                                     tint = MaterialTheme.colorScheme.primary,
                                 )

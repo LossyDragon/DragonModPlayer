@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">Dragon Mod Player</string>
+    <string name="desc_back_button">Go Back</string>
+    <string name="desc_message_box_icon">Message Box Icon</string>
+    <string name="desc_breadcrumb">Breadcrumb Icon</string>
+    <string name="desc_search">Search Input</string>
+    <string name="desc_search_clear">Clear Search Field</string>
+    <string name="desc_folder_pick">Choose Starting Folder Destination</string>
+    <string name="desc_directory_item">Directory %s</string>
+    <string name="desc_module_item">Module %s</string>
+    <string name="desk_sort_button">Sort items button</string>
 </resources>

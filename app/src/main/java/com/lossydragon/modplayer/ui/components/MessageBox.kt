@@ -7,10 +7,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.tooling.preview.datasource.*
 import androidx.compose.ui.unit.*
+import com.lossydragon.modplayer.R
 import com.lossydragon.modplayer.ui.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -39,7 +41,7 @@ fun MessageBox(
                     icon?.let {
                         Icon(
                             imageVector = it,
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.desc_message_box_icon),
                             tint = MaterialTheme.colorScheme.secondary,
                             modifier = Modifier
                                 .padding(bottom = 16.dp)
