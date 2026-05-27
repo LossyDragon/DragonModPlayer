@@ -84,8 +84,6 @@ android {
     }
 }
 
-
-
 dependencies {
     implementation(project(":libxmp"))
 
@@ -93,8 +91,6 @@ dependencies {
     implementation(platform(libs.koin.bom))
 
     debugImplementation(libs.compose.ui.tooling.preview)
-
-    lintChecks(libs.compose.lint.checks)
 
     ksp(libs.room.compiler)
 

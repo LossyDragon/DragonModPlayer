@@ -4,7 +4,6 @@ activityCompose = "1.13.0" # https://mvnrepository.com/artifact/androidx.activit
 androidGradlePlugin = "9.2.1" # https://mvnrepository.com/artifact/com.android.application/com.android.application.gradle.plugin
 colorpickerCompose = "1.1.4" # https://mvnrepository.com/artifact/com.github.skydoves/colorpicker-compose
 composeBom = "2026.05.01" # https://mvnrepository.com/artifact/androidx.compose/compose-bom
-composeLintChecks = "1.5.0" # https://mvnrepository.com/artifact/com.slack.lint.compose/compose-lint-checks
 composeSettings = "3.1.0" # https://mvnrepository.com/artifact/com.github.alorma.compose-settings/ui-tiles-expressive/versions
 dataStore = "1.2.1" # https://mvnrepository.com/artifact/androidx.datastore/datastore-preferences
 koin-bom = "4.2.1" # https://mvnrepository.com/artifact/io.insert-koin/koin-core
@@ -29,7 +28,6 @@ compose-activity = { module = "androidx.activity:activity-compose", version.ref 
 compose-animation-animation = { module = "androidx.compose.animation:animation" }
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
 compose-foundation = { module = "androidx.compose.foundation:foundation" }
-compose-lint-checks = { module = "com.slack.lint.compose:compose-lint-checks", version.ref = "composeLintChecks" }
 compose-material-icons-core = { module = "androidx.compose.material:material-icons-core" }
 compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 compose-material3 = { module = "androidx.compose.material3:material3", version = "1.5.0-alpha20" }
