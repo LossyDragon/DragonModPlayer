@@ -157,6 +157,10 @@ class PlayerViewModel(
         isShuffle: Boolean,
         repeatMode: Int = state.value.repeatMode
     ) {
+        if (files.isEmpty()) return
+
+        val startAt = if (isShuffle) files.indices.random() else startAt
+
         val startIndex = startAt.coerceIn(0, files.lastIndex)
 
         state.update {
