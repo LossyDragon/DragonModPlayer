@@ -32,9 +32,9 @@ namespace {
 }
 
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, TAG, __VA_ARGS__)
-#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
-#define LOGW(...) __android_log_print(ANDROID_LOG_WARN, TAG, __VA_ARGS__)
-#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
+#define LOG_INFO(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
+#define LOG_WARN(...) __android_log_print(ANDROID_LOG_WARN, TAG, __VA_ARGS__)
+#define LOG_ERROR(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
 
 #define JNI_FUNCTION(name) Java_org_helllabs_libxmp_Xmp_##name
 
@@ -396,20 +396,21 @@ int play_buffer(void* buffer, int size, int looped) {
   return ret;
 }
 
-JNIEXPORT jboolean JNICALL JNI_FUNCTION(init)(JNIEnv* env, jobject obj, jint rate, jint ms) {
-  LOGI("init() called - rate: %d, ms: %d, tid: %d", rate, ms, get_thread_id());
+JNIEXPORT jboolean JNICALL JNI_FUNCTION(init)(JNIEnv* env, jobject obj, jint rate, jint ms, jint mode, jint channels, jint api) {
+  LOG_INFO("init() called - rate: %d, ms: %d, tid: %d", rate, ms, get_thread_id());
 
   XmpPlayerState& state = XmpPlayerState::instance();
 
   xmp_context ctx = xmp_create_context();
   if (!ctx) {
-    LOGE("init() failed - could not create context");
+    LOG_ERROR("init() failed - could not create context");
     return JNI_FALSE;
   }
 
-  int actual_rate = open_audio(rate, ms);
+  // int rate, int latency, int performance_mode, int channel_count, int audio_api
+  int actual_rate = open_audio(rate, ms, mode, channels, api);
   if (actual_rate < 0) {
-    LOGE("init() failed - could not open audio");
+    LOG_ERROR("init() failed - could not open audio");
     xmp_free_context(ctx);
     return JNI_FALSE;
   }
@@ -425,7 +426,7 @@ JNIEXPORT jboolean JNICALL JNI_FUNCTION(init)(JNIEnv* env, jobject obj, jint rat
   state.setBufferNum(buffer_num);
 
   if (actual_rate != rate) {
-    LOGI("init() - sample rate adjusted: requested=%d, actual=%d", rate, actual_rate);
+    LOG_INFO("init() - sample rate adjusted: requested=%d, actual=%d", rate, actual_rate);
   }
 
   // Cache field IDs
@@ -436,13 +437,13 @@ JNIEXPORT jboolean JNICALL JNI_FUNCTION(init)(JNIEnv* env, jobject obj, jint rat
   // cacheSequenceVarsIDs(env);
 
   state.setInitialized(true);
-  LOGI("init() completed successfully - actual_rate=%d", actual_rate);
+  LOG_INFO("init() completed successfully - actual_rate=%d", actual_rate);
 
   return JNI_TRUE;
 }
 
 JNIEXPORT jint JNICALL JNI_FUNCTION(deinit)(JNIEnv* env, jobject obj) {
-  LOGI("deinit() called - tid: %d", get_thread_id());
+  LOG_INFO("deinit() called - tid: %d", get_thread_id());
 
   XmpPlayerState& state = XmpPlayerState::instance();
 
@@ -457,17 +458,17 @@ JNIEXPORT jint JNICALL JNI_FUNCTION(deinit)(JNIEnv* env, jobject obj) {
   LOGD("deinit() - freed context");
 
   close_audio();
-  LOGI("deinit() completed - tid: %d", get_thread_id());
+  LOG_INFO("deinit() completed - tid: %d", get_thread_id());
 
   return 0;
 }
 
 JNIEXPORT jint JNICALL JNI_FUNCTION(loadModuleFd)(JNIEnv* env, jobject obj, jint fd, jobject modInfo) {
-  LOGI("loadModuleFd() called - fd: %d, tid: %d", fd, get_thread_id());
+  LOG_INFO("loadModuleFd() called - fd: %d, tid: %d", fd, get_thread_id());
 
   FileHandle file(fdopen(fd, "rb"));
   if (!file) {
-    LOGE("loadModuleFd() - fdopen failed: %s", strerror(errno));
+    LOG_ERROR("loadModuleFd() - fdopen failed: %s", strerror(errno));
     return -1;
   }
 
@@ -475,7 +476,7 @@ JNIEXPORT jint JNICALL JNI_FUNCTION(loadModuleFd)(JNIEnv* env, jobject obj, jint
   int res = xmp_test_module_from_file(file.get(), &ti);
 
   if (res != 0) {
-    LOGW("loadModuleFd() - test failed: %d", res);
+    LOG_WARN("loadModuleFd() - test failed: %d", res);
     return -2;
   }
 
@@ -493,7 +494,7 @@ JNIEXPORT jint JNICALL JNI_FUNCTION(loadModuleFd)(JNIEnv* env, jobject obj, jint
 
   struct stat statbuf{};
   if (fstat(fd, &statbuf) != 0) {
-    LOGE("loadModuleFd() - fstat failed: %s", strerror(errno));
+    LOG_ERROR("loadModuleFd() - fstat failed: %s", strerror(errno));
     return -3;
   }
 
@@ -505,18 +506,18 @@ JNIEXPORT jint JNICALL JNI_FUNCTION(loadModuleFd)(JNIEnv* env, jobject obj, jint
     state.getPosition().fill(0);
     state.setSequence(0);
     state.setModuleLoaded(true);
-    LOGI("loadModuleFd() - loaded: %s", ti.name);
+    LOG_INFO("loadModuleFd() - loaded: %s", ti.name);
   }
 
   return res;
 }
 
 JNIEXPORT jboolean JNICALL JNI_FUNCTION(testModuleFd)(JNIEnv* env, jobject obj, jint fd, jobject modInfo) {
-  LOGI("testModuleFd() called - fd: %d, tid: %d", fd, get_thread_id());
+  LOG_INFO("testModuleFd() called - fd: %d, tid: %d", fd, get_thread_id());
 
   FileHandle file(fdopen(fd, "rb"));
   if (!file) {
-    LOGE("testModuleFd() - fdopen failed for fd %d: %s", fd, strerror(errno));
+    LOG_ERROR("testModuleFd() - fdopen failed for fd %d: %s", fd, strerror(errno));
     return JNI_FALSE;
   }
 
@@ -527,18 +528,18 @@ JNIEXPORT jboolean JNICALL JNI_FUNCTION(testModuleFd)(JNIEnv* env, jobject obj, 
 
   // Ensure field IDs are cached
   if (!g_modInfoIDs.name || !g_modInfoIDs.type) {
-    LOGW("testModuleFd() - field IDs not cached, caching now");
+    LOG_WARN("testModuleFd() - field IDs not cached, caching now");
     cacheModInfoIDs(env);
   }
 
   if (res == 0) {
-    LOGI("testModuleFd() - valid module: '%s' (type: %s)", ti.name, ti.type);
+    LOG_INFO("testModuleFd() - valid module: '%s' (type: %s)", ti.name, ti.type);
 
     jstring name = env->NewStringUTF(ti.name);
     jstring type = env->NewStringUTF(ti.type);
 
     if (!name || !type) {
-      LOGE("testModuleFd() - failed to create Java strings");
+      LOG_ERROR("testModuleFd() - failed to create Java strings");
       return JNI_FALSE;
     }
 
@@ -547,10 +548,10 @@ JNIEXPORT jboolean JNICALL JNI_FUNCTION(testModuleFd)(JNIEnv* env, jobject obj, 
 
     LOGD("testModuleFd() - successfully populated modInfo");
   } else {
-      char path[PATH_MAX];
-      ssize_t len = readlink(("/proc/self/fd/" + std::to_string(fd)).c_str(), path, sizeof(path) - 1);
-      if (len > 0) path[len] = '\0';
-      LOGW("testModuleFd() - not a valid module, error: %d, file: %s", res, len > 0 ? path : "unknown");
+    char path[PATH_MAX];
+    ssize_t len = readlink(("/proc/self/fd/" + std::to_string(fd)).c_str(), path, sizeof(path) - 1);
+    if (len > 0) path[len] = '\0';
+    LOG_WARN("testModuleFd() - not a valid module, error: %d, file: %s", res, len > 0 ? path : "unknown");
   }
 
   return res == 0 ? JNI_TRUE : JNI_FALSE;
@@ -568,18 +569,18 @@ JNIEXPORT jint JNICALL JNI_FUNCTION(releaseModule)(JNIEnv* env, jobject obj) {
   return 0;
 }
 
-JNIEXPORT jint JNICALL JNI_FUNCTION(startPlayer)(JNIEnv* env, jobject obj, jint rate) {
+JNIEXPORT jint JNICALL JNI_FUNCTION(startPlayer)(JNIEnv* env, jobject obj, jint rate, jint format) {
   XmpPlayerState& state = XmpPlayerState::instance();
   int use_rate = state.getActualRate() > 0 ? state.getActualRate() : rate;
 
-  LOGI("startPlayer() - requested: %d, using: %d, tid: %d", rate, use_rate, get_thread_id());
+  LOG_INFO("startPlayer() - requested: %d, using: %d, tid: %d", rate, use_rate, get_thread_id());
 
   std::unique_lock<std::mutex> lock = state.lock();
   LOGD("startPlayer() - acquired lock");
 
   state.allocateFrameInfo(state.getBufferNum());
   if (!state.getFrameInfo()) {
-    LOGE("startPlayer() - failed to allocate frame info");
+    LOG_ERROR("startPlayer() - failed to allocate frame info");
     return -101;
   }
 
@@ -591,14 +592,14 @@ JNIEXPORT jint JNICALL JNI_FUNCTION(startPlayer)(JNIEnv* env, jobject obj, jint 
   state.setLoopCount(0);
   state.setPlaying(true);
 
-  int ret = xmp_start_player(state.getContext(), use_rate, 0);
+  int ret = xmp_start_player(state.getContext(), use_rate, format);
 
-  LOGI("startPlayer() completed - result: %d, tid: %d", ret, get_thread_id());
+  LOG_INFO("startPlayer() completed - result: %d, tid: %d", ret, get_thread_id());
   return ret;
 }
 
 JNIEXPORT jint JNICALL JNI_FUNCTION(endPlayer)(JNIEnv* env, jobject obj) {
-  LOGI("endPlayer() called - tid: %d", get_thread_id());
+  LOG_INFO("endPlayer() called - tid: %d", get_thread_id());
 
   XmpPlayerState& state = XmpPlayerState::instance();
   std::unique_lock<std::mutex> lock = state.lock();
@@ -612,7 +613,7 @@ JNIEXPORT jint JNICALL JNI_FUNCTION(endPlayer)(JNIEnv* env, jobject obj) {
     LOGD("endPlayer() - freed frame info");
   }
 
-  LOGI("endPlayer() completed - tid: %d", get_thread_id());
+  LOG_INFO("endPlayer() completed - tid: %d", get_thread_id());
   return 0;
 }
 
@@ -738,7 +739,7 @@ JNIEXPORT void JNICALL JNI_FUNCTION(getModVars)(JNIEnv* env, jobject obj, jobjec
   // LOGD("getModVars() called - tid: %d, initialized: %d", tid, state.isInitialized());
 
   if (!state.isInitialized()) {
-    LOGW("getModVars() - early exit: not initialized - tid: %d", tid);
+    LOG_WARN("getModVars() - early exit: not initialized - tid: %d", tid);
     return;
   }
 
@@ -747,7 +748,7 @@ JNIEXPORT void JNICALL JNI_FUNCTION(getModVars)(JNIEnv* env, jobject obj, jobjec
   // LOGD("getModVars() - acquired lock - tid: %d", tid);
 
   if (!state.isModuleLoaded()) {
-    LOGW("getModVars() - module not loaded - tid: %d", tid);
+    LOG_WARN("getModVars() - module not loaded - tid: %d", tid);
     return;
   }
 
@@ -868,7 +869,7 @@ JNIEXPORT void JNICALL JNI_FUNCTION(getChannelData)(JNIEnv* env, jobject obj, jo
   int tid = get_thread_id();
 
   if (!state.isInitialized()) {
-    LOGW("getChannelData() - early exit: not initialized - tid: %d", tid);
+    LOG_WARN("getChannelData() - early exit: not initialized - tid: %d", tid);
     return;
   }
 
@@ -945,14 +946,14 @@ JNIEXPORT void JNICALL JNI_FUNCTION(getChannelData)(JNIEnv* env, jobject obj, jo
 }
 
 JNIEXPORT jint JNICALL JNI_FUNCTION(getPatternRows)(JNIEnv* env, jobject obj, jint pat) {
-    XmpPlayerState& state = XmpPlayerState::instance();
-    if (!state.isModuleLoaded()) return 0;
+  XmpPlayerState& state = XmpPlayerState::instance();
+  if (!state.isModuleLoaded()) return 0;
 
-    const xmp_module_info& mi = state.getModuleInfo();
-    if (pat < 0 || pat >= mi.mod->pat) return 0;
+  const xmp_module_info& mi = state.getModuleInfo();
+  if (pat < 0 || pat >= mi.mod->pat) return 0;
 
-    const xmp_pattern* xxp = mi.mod->xxp[pat];
-    return xxp ? xxp->rows : 0;
+  const xmp_pattern* xxp = mi.mod->xxp[pat];
+  return xxp ? xxp->rows : 0;
 }
 
 JNIEXPORT void JNICALL JNI_FUNCTION(getPatternRow)(JNIEnv* env, jobject obj, jint pat, jint row, jbyteArray rowNotes, jbyteArray rowInstruments, jbyteArray rowFxType, jbyteArray rowFxParm) {

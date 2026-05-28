@@ -74,6 +74,18 @@ object Xmp {
         }
     }
 
+    /* Oboe Audio configuration */
+    const val OBOE_PERFMODE_LOWLATENCY = -1
+    const val OBOE_PERFMODE_NONE = 1
+    const val OBOE_PERFMODE_POWERSAVING = 2
+
+    const val OBOE_CHANNELS_STEREO = -1
+    const val OBOE_CHANNELS_MONO = 1
+
+    const val OBOE_AUDIO_API_AAUDIO = 1
+    const val OBOE_AUDIO_API_OPENSLES = 2
+    const val OBOE_AUDIO_API_UNSPECIFIED = -1
+
     // Default Values
 
     val volumeBoostRange = 0..3
@@ -107,7 +119,13 @@ object Xmp {
 
     external fun hasFreeBuffer(): Boolean
 
-    external fun init(rate: Int, ms: Int): Boolean
+    external fun init(
+        rate: Int,
+        ms: Int,
+        perfMode: Int = OBOE_PERFMODE_LOWLATENCY,
+        channels: Int = OBOE_CHANNELS_STEREO,
+        audioApi: Int = OBOE_AUDIO_API_UNSPECIFIED
+    ): Boolean
 
     external fun mute(chn: Int, status: Int): Int
 
@@ -121,7 +139,7 @@ object Xmp {
 
     private external fun setPlayerNative(parm: Int, value: Int): Int
 
-    external fun startPlayer(rate: Int): Int
+    external fun startPlayer(rate: Int, format: Int = 0): Int
 
     external fun stopAudio(): Boolean
 

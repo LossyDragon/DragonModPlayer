@@ -8,10 +8,10 @@
 #include <time.h>
 #include <atomic>
 
-#define TAG "XmpOboe"
-#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
-#define LOGW(...) __android_log_print(ANDROID_LOG_WARN, TAG, __VA_ARGS__)
-#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
+#define TAG "libxmp Oboe"
+#define LOG_INFO(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
+#define LOG_WARN(...) __android_log_print(ANDROID_LOG_WARN, TAG, __VA_ARGS__)
+#define LOG_ERROR(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
 
 #define BUFFER_TIME 40
 
@@ -48,7 +48,7 @@ public:
         if (xRunResult) { // Operator bool checks if result is OK
           int32_t current_xruns = xRunResult.value();
           if (current_xruns != last_xrun_count) {
-            LOGW("XRuns detected: %d (new: %d)", current_xruns, current_xruns - last_xrun_count);
+            LOG_WARN("XRuns detected: %d (new: %d)", current_xruns, current_xruns - last_xrun_count);
             last_xrun_count = current_xruns;
           }
         }
@@ -68,7 +68,7 @@ public:
       if (lf == ff) {
         int32_t remainingBytes = bytesRequested - bytesCopied;
         if (!expect_silence.load(std::memory_order_relaxed)) {
-          LOGW("UNDERRUN: No audio data available, filling %d bytes with silence", remainingBytes);
+          LOG_WARN("UNDERRUN: No audio data available, filling %d bytes with silence", remainingBytes);
           underrun_count_.fetch_add(1, std::memory_order_relaxed);
         }
         memset(&outputBuffer[bytesCopied / sizeof(int16_t)], 0, remainingBytes);
@@ -109,10 +109,10 @@ public:
   }
 
   void onErrorAfterClose(oboe::AudioStream* oboeStream, oboe::Result error) override {
-    LOGE("Stream closed due to error: %s", oboe::convertToText(error));
+    LOG_ERROR("Stream closed due to error: %s", oboe::convertToText(error));
 
     if (error == oboe::Result::ErrorDisconnected) {
-      LOGE("Audio device disconnected");
+      LOG_ERROR("Audio device disconnected");
     }
   }
 
@@ -137,49 +137,87 @@ static int buffer_size;
 static pthread_mutex_t mutex;
 static std::atomic<float> volume_scale(1.0f);
 static std::atomic<int32_t> underrun_count(0);
+static int actual_channels = 2;
 
-static int oboe_open(int sr, int num, char* buf, int buf_size) {
+static int oboe_open(int sample_rate, int num, char* buf, int buf_size, int performance_mode, int channel_count, int audio_api) {
   oboe::AudioStreamBuilder builder;
 
   // Initialize mutex
-  if (pthread_mutex_init(&mutex, nullptr) != 0) {
-    LOGE("Failed to initialize mutex");
-    return -1;
-  }
+  // if (pthread_mutex_init(&mutex, nullptr) != 0) {
+  //   LOG_ERROR("Failed to initialize mutex");
+  //   return -1;
+  // }
 
   // Create callback with the buffer that's already allocated
   audio_callback = new XmpAudioCallback(buf, buf_size, num, &first_free, &last_free, &volume_scale, &underrun_count);
 
+  oboe::PerformanceMode pMode;
+  switch (performance_mode) {
+    case 1:
+      pMode = oboe::PerformanceMode::None;
+      break;
+    case 2:
+      pMode = oboe::PerformanceMode::PowerSaving;
+      break;
+    default:
+      pMode = oboe::PerformanceMode::LowLatency;
+  }
+
+  oboe::ChannelCount cCount;
+  switch (channel_count) { // NOLINT(*-multiway-paths-covered)
+    case 1:
+      cCount = oboe::ChannelCount::Mono;
+      break;
+    default:
+      cCount = oboe::ChannelCount::Stereo;
+  }
+
+  oboe::AudioApi aApi;
+  switch (audio_api) {
+    case 1:
+      aApi = oboe::AudioApi::AAudio;
+      break;
+    case 2:
+      aApi = oboe::AudioApi::OpenSLES;
+      break;
+    default:
+      aApi = oboe::AudioApi::Unspecified;
+  }
+
   // Configure stream - request sample rate but Oboe may override
   builder.setDirection(oboe::Direction::Output)
-    ->setPerformanceMode(oboe::PerformanceMode::LowLatency)
+    ->setPerformanceMode(pMode)
     ->setSharingMode(oboe::SharingMode::Shared)
     ->setFormat(oboe::AudioFormat::I16)
-    ->setChannelCount(oboe::ChannelCount::Stereo)
-    ->setSampleRate(sr)
+    ->setChannelCount(cCount)
+    ->setSampleRate(sample_rate)
     ->setDataCallback(audio_callback)
-    ->setErrorCallback(audio_callback);
+    ->setErrorCallback(audio_callback)
+    ->setAudioApi(aApi);
 
   // Open stream
   oboe::Result result = builder.openStream(audio_stream);
   if (result != oboe::Result::OK) {
-    LOGE("Failed to open stream: %s", oboe::convertToText(result));
+    LOG_ERROR("Failed to open stream: %s", oboe::convertToText(result));
     delete audio_callback;
     audio_callback = nullptr;
-    pthread_mutex_destroy(&mutex);
+    // pthread_mutex_destroy(&mutex);
     return -1;
   }
 
-  LOGI("Stream opened: rate=%d, burst=%d, capacity=%d, sharingMode=%s",
+  actual_channels = audio_stream->getChannelCount();
+
+  LOG_INFO("Stream opened: rate=%d, burst=%d, capacity=%d, sharingMode=%s, channels=%d",
     audio_stream->getSampleRate(),
     audio_stream->getFramesPerBurst(),
     audio_stream->getBufferCapacityInFrames(),
-    audio_stream->getSharingMode() == oboe::SharingMode::Exclusive ? "Exclusive" : "Shared");
+    audio_stream->getSharingMode() == oboe::SharingMode::Exclusive ? "Exclusive" : "Shared",
+    actual_channels);
 
   // Log which audio API is being used
   oboe::AudioApi audioApi = audio_stream->getAudioApi();
   const char* apiName = (audioApi == oboe::AudioApi::AAudio) ? "AAudio" : (audioApi == oboe::AudioApi::OpenSLES) ? "OpenSL ES" : "Unknown";
-  LOGI("Audio API: %s", apiName);
+  LOG_INFO("Audio API: %s", apiName);
 
   // Return the actual sample rate Oboe opened with
   return audio_stream->getSampleRate();
@@ -200,7 +238,7 @@ static void oboe_close() {
   }
 
   unlock();
-  pthread_mutex_destroy(&mutex);
+  // pthread_mutex_destroy(&mutex);
 }
 
 void close_audio() {
@@ -209,52 +247,66 @@ void close_audio() {
     free(buffer);
     buffer = nullptr;
   }
+  pthread_mutex_destroy(&mutex);
 }
 
-int open_audio(int rate, int latency) {
+int open_audio(int rate, int latency, int performance_mode, int channel_count, int audio_api) {
+  if (pthread_mutex_init(&mutex, nullptr) != 0) {
+    LOG_ERROR("Failed to initialize mutex");
+    return -1;
+  }
+
   buffer_num = latency / BUFFER_TIME;
 
   if (buffer_num < 3) buffer_num = 3;
 
+  // What we intend to request, so we can detect a mismatch after opening.
+  int assumed_channels = (channel_count == 1) ? 1 : 2;
+
   // Allocate buffer with requested rate first (we'll resize if needed)
-  buffer_size = rate * 2 * 2 * BUFFER_TIME / 1000;
+  buffer_size = rate * assumed_channels * (int)sizeof(int16_t) * BUFFER_TIME / 1000;
   buffer = (char*)malloc(buffer_size * buffer_num);
   if (buffer == nullptr) {
-    LOGE("Failed to allocate audio buffer");
+    LOG_ERROR("Failed to allocate audio buffer");
+    pthread_mutex_destroy(&mutex);
     return -1;
   }
 
   // Open Oboe - it will return the actual sample rate
-  int actual_rate = oboe_open(rate, buffer_num, buffer, buffer_size);
+  int actual_rate = oboe_open(rate, buffer_num, buffer, buffer_size, performance_mode, channel_count, audio_api);
   if (actual_rate < 0) {
     free(buffer);
     buffer = nullptr;
+    pthread_mutex_destroy(&mutex);
     return -1;
   }
 
-  // If actual rate differs from requested, we need to reallocate buffers
-  if (actual_rate != rate) {
-    LOGI("Sample rate mismatch: requested=%d, actual=%d - reallocating buffers", rate, actual_rate);
+  // Reallocate if rate OR channels differ from what we sized for
+  if (actual_rate != rate || actual_channels != assumed_channels) {
+    LOG_INFO("Buffer mismatch: rate %d->%d, channels %d->%d - reallocating", rate, actual_rate, assumed_channels, actual_channels);
 
     // Close the stream
     oboe_close();
 
     // Recalculate buffer size for actual rate
-    buffer_size = actual_rate * 2 * 2 * BUFFER_TIME / 1000;
+    buffer_size = actual_rate * actual_channels * (int)sizeof(int16_t) * BUFFER_TIME / 1000;
 
     // Reallocate buffer
     free(buffer);
     buffer = (char*)malloc(buffer_size * buffer_num);
     if (buffer == nullptr) {
-      LOGE("Failed to reallocate audio buffer");
+      LOG_ERROR("Failed to reallocate audio buffer");
+      pthread_mutex_destroy(&mutex);
       return -1;
     }
 
     // Reopen with correct buffer size
-    int reopen_rate = oboe_open(actual_rate, buffer_num, buffer, buffer_size);
+    int reopen_rate = oboe_open(actual_rate, buffer_num, buffer, buffer_size, performance_mode, channel_count, audio_api);
     if (reopen_rate < 0) {
       free(buffer);
       buffer = nullptr;
+      pthread_mutex_destroy(&mutex);
+      LOG_ERROR("Failed to reallocate audio buffer with adjusted buffer size");
       return -1;
     }
   }
@@ -263,7 +315,7 @@ int open_audio(int rate, int latency) {
   first_free = 0;
   last_free = 0;
 
-  LOGI("Audio opened: requested_rate=%d, actual_rate=%d, latency=%d, buffers=%d, buffer_size=%d", rate, actual_rate, latency, buffer_num, buffer_size);
+  LOG_INFO("Audio opened: requested_rate=%d, actual_rate=%d, channels=%d, latency=%d, buffers=%d, buffer_size=%d", rate, actual_rate, actual_channels, latency, buffer_num, buffer_size);
 
   // Return the actual rate so xmp can use it
   return actual_rate;
@@ -333,7 +385,7 @@ int fill_buffer(int looped) {
 
   ret = play_buffer(b, buffer_size, looped);
 
-  // LOGI("fill_buffer: filled buffer %d, first_free %d->%d, last_free=%d, ret=%d",
+  // LOG_INFO("fill_buffer: filled buffer %d, first_free %d->%d, last_free=%d, ret=%d",
   //      ff, ff, next_first, lf, ret);
 
   return ret;
@@ -343,7 +395,7 @@ int restart_audio() {
   lock();
 
   if (!audio_stream) {
-    LOGE("restart_audio: audio_stream is null");
+    LOG_ERROR("restart_audio: audio_stream is null");
     unlock();
     return -1;
   }
@@ -351,18 +403,18 @@ int restart_audio() {
   // Load atomic values for logging
   int ff = atomic_load_int(&first_free);
   int lf = atomic_load_int(&last_free);
-  LOGI("restart_audio: Starting stream, first_free=%d, last_free=%d", ff, lf);
+  LOG_INFO("restart_audio: Starting stream, first_free=%d, last_free=%d", ff, lf);
 
   oboe::Result result = audio_stream->requestStart();
 
   unlock();
 
   if (result != oboe::Result::OK) {
-    LOGE("Failed to start stream: %s", oboe::convertToText(result));
+    LOG_ERROR("Failed to start stream: %s", oboe::convertToText(result));
     return -1;
   }
 
-  LOGI("Stream started successfully");
+  LOG_INFO("Stream started successfully");
   return 0;
 }
 

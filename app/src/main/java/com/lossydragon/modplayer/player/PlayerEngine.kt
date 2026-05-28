@@ -85,6 +85,9 @@ class PlayerEngine(
     private var sampleRate: Int = Xmp.DEFAULT_SAMPLE_RATE
 
     @Volatile
+    private var format: Int = 0
+
+    @Volatile
     private var bufferMs: Int = Xmp.DEFAULT_BUFFER_MS
 
     @Volatile
@@ -110,10 +113,9 @@ class PlayerEngine(
 
     init {
         prefs.getSampleRateFlow().distinctUntilChanged().onEach { sampleRate = it }.launchIn(scope)
+        prefs.getPlayerFormatFlow().distinctUntilChanged().onEach { format = it }.launchIn(scope)
         prefs.getBufferMsFlow().distinctUntilChanged().onEach { bufferMs = it }.launchIn(scope)
-        prefs.getDefaultPanFlow().distinctUntilChanged().onEach {
-            defaultPan = it
-        }.launchIn(scope)
+        prefs.getDefaultPanFlow().distinctUntilChanged().onEach { defaultPan = it }.launchIn(scope)
         prefs.getVolumeBoostFlow().distinctUntilChanged().onEach {
             volumeBoost = it
             if (initialized) Xmp.setPlayer(Xmp.XMP_PLAYER_AMP, it)
@@ -253,7 +255,7 @@ class PlayerEngine(
         stopRequest = false
         paused = false
 
-        if (Xmp.startPlayer(sampleRate) != 0) {
+        if (Xmp.startPlayer(sampleRate, format) != 0) {
             Timber.e("Xmp.startPlayer() failed")
             return
         }

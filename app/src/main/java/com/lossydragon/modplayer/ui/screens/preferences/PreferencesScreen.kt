@@ -7,14 +7,19 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.*
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.*
+import androidx.compose.ui.unit.dp
 import com.lossydragon.modplayer.db.AppPreferences
 import com.lossydragon.modplayer.ui.components.BackButton
 import com.lossydragon.modplayer.ui.screens.preferences.section.PreferenceBrowser
 import com.lossydragon.modplayer.ui.screens.preferences.section.PreferenceInfo
 import com.lossydragon.modplayer.ui.screens.preferences.section.PreferenceInterface
+import com.lossydragon.modplayer.ui.screens.preferences.section.PreferenceOboe
 import com.lossydragon.modplayer.ui.screens.preferences.section.PreferencePlayer
+import com.lossydragon.modplayer.ui.screens.preferences.section.PreferenceXmp
 import com.lossydragon.modplayer.ui.theme.AppTheme
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -113,6 +118,14 @@ internal fun PreferencesScreen(
                         onFormats = onFormats,
                         onAbout = onAbout
                     )
+                    Text(
+                        modifier = Modifier.padding(vertical = 6.dp).fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.surfaceTint,
+                        text = "Advanced Configuration Below"
+                    )
+                    PreferenceXmp(colors)
+                    PreferenceOboe(colors)
                 }
             )
         }

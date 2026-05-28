@@ -7,16 +7,15 @@ import androidx.compose.ui.platform.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.alorma.compose.settings.ui.expressive.SettingsSwitch
 import com.lossydragon.modplayer.db.AppPreferences
 import com.lossydragon.modplayer.ui.screens.preferences.components.PreferenceSection
 import com.lossydragon.modplayer.ui.theme.AppTheme
-import kotlinx.coroutines.launch
+import org.helllabs.libxmp.Xmp
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun PreferencePlayer(
+fun PreferenceOboe(
     colors: ListItemColors
 ) {
     val scope = rememberCoroutineScope()
@@ -26,28 +25,46 @@ fun PreferencePlayer(
         koinInject<AppPreferences>()
     }
 
-    val autoResume by prefs.getAutoResumeFlow()
-        .collectAsStateWithLifecycle(initialValue = false)
+    val perfMode = prefs.getOboePerfModeFlow()
+        .collectAsStateWithLifecycle(initialValue = Xmp.OBOE_PERFMODE_LOWLATENCY)
+    val channels = prefs.getOboeChannelsFlow()
+        .collectAsStateWithLifecycle(initialValue = Xmp.OBOE_CHANNELS_STEREO)
+    val audioApi = prefs.getOboeAudioApiFlow()
+        .collectAsStateWithLifecycle(
+            initialValue = Xmp.OBOE_AUDIO_API_UNSPECIFIED
+        )
+
+    var isPerfModeShowing by remember { mutableStateOf(false) }
+    if (isPerfModeShowing) {
+    }
+
+    var isChannelsShowing by remember { mutableStateOf(false) }
+    if (isChannelsShowing) {
+    }
+
+    var isAudioApiShowing by remember { mutableStateOf(false) }
+    if (isAudioApiShowing) {
+    }
 
     PreferenceSection(
         title = {
             Text(
-                text = "Player",
+                text = "Oboe (Audio)",
                 style = MaterialTheme.typography.headlineSmall
             )
         },
         verticalArrangement = Arrangement.spacedBy(4.dp),
         content = {
-            SettingsSwitch(
-                title = { Text("Auto-resume on startup") },
-                subtitle = {
-                    Text("Restore the last queue and continue playback when the app opens.")
-                },
-                state = autoResume,
-                onCheckedChange = { scope.launch { prefs.setAutoResume(it) } },
-                colors = colors,
-                shapes = ListItemDefaults.segmentedShapes(0, 11),
-            )
+            // SettingsSwitch(
+            //     title = { Text("Auto-resume on startup") },
+            //     subtitle = {
+            //         Text("Restore the last queue and continue playback when the app opens.")
+            //     },
+            //     state = autoResume,
+            //     onCheckedChange = { scope.launch { prefs.setAutoResume(it) } },
+            //     colors = colors,
+            //     shapes = ListItemDefaults.segmentedShapes(0, 11),
+            // )
         }
     )
 }
@@ -61,7 +78,7 @@ private fun Preview() {
             val colors = ListItemDefaults.segmentedColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainer,
             )
-            PreferencePlayer(colors = colors)
+            PreferenceOboe(colors = colors)
         }
     }
 }

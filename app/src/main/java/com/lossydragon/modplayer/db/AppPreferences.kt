@@ -33,26 +33,6 @@ class AppPreferences(context: Context) {
 
     private val dataStore: DataStore<Preferences> = context.dataStore
 
-    private val appThemeStyle = intPreferencesKey("app_theme_style")
-    private val appThemeAmoled = booleanPreferencesKey("app_theme_amoled")
-    private val appThemeColor = intPreferencesKey("app_theme_color")
-    private val lastDirectoryUri = stringPreferencesKey("last_directory_uri")
-    private val sampleRate = intPreferencesKey("sample_rate")
-    private val bufferMs = intPreferencesKey("buffer_ms")
-    private val defaultPan = intPreferencesKey("default_pan")
-    private val volumeBoost = intPreferencesKey("volume_boost")
-    private val stereoMix = intPreferencesKey("stereo_mix")
-    private val dspEffects = intPreferencesKey("dsp_effects")
-    private val playerVolume = intPreferencesKey("player_volume")
-    private val interpolationType = intPreferencesKey("interpolation_type")
-    private val playerFlags = intPreferencesKey("player_flags")
-    private val autoResume = booleanPreferencesKey("auto_resume")
-    private val queueJson = stringPreferencesKey("queue_json")
-    private val queueIndex = intPreferencesKey("queue_index")
-    private val queueShuffle = booleanPreferencesKey("queue_shuffle")
-    private val queueRepeat = intPreferencesKey("queue_repeat")
-    private val queuePositionMs = longPreferencesKey("queue_position_ms")
-
     private fun <T> flow(key: Preferences.Key<T>, default: T): Flow<T> =
         dataStore.data.map { it[key] ?: default }
 
@@ -68,53 +48,89 @@ class AppPreferences(context: Context) {
     suspend fun resetAll() = dataStore.edit { it.clear() }
 
     /* Application */
+    private val appThemeAmoled = booleanPreferencesKey("app_theme_amoled")
     fun getAppThemeAmoledFlow() = flow(appThemeAmoled, false)
     suspend fun setAppThemeAmoled(v: Boolean) = set(appThemeAmoled, v)
 
+    private val appThemeStyle = intPreferencesKey("app_theme_style")
     fun getAppThemeStyleFlow() = flow(appThemeStyle, PaletteStyle.Vibrant.ordinal)
     suspend fun setAppThemeStyle(v: Int) = set(appThemeStyle, v)
 
+    private val appThemeColor = intPreferencesKey("app_theme_color")
     fun getThemeColorFlow() = flow(appThemeColor, seed.toArgb())
     suspend fun setThemeColor(v: Int) = set(appThemeColor, v)
 
     /* File Browser */
+    private val lastDirectoryUri = stringPreferencesKey("last_directory_uri")
     fun getLastDirectoryFlow() = flowNullable(lastDirectoryUri)
     suspend fun getLastDirectoryUri() = get(lastDirectoryUri, "").ifBlank { null }
     suspend fun setLastDirectoryUri(v: String) = set(lastDirectoryUri, v)
 
     /* Player */
+    private val sampleRate = intPreferencesKey("sample_rate")
     fun getSampleRateFlow() = flow(sampleRate, Xmp.DEFAULT_SAMPLE_RATE)
     suspend fun setSampleRate(v: Int) = set(sampleRate, v)
 
+    private val playerFlags = intPreferencesKey("player_flags")
     fun getPlayerFlagsFlow() = flow(playerFlags, 0)
     suspend fun setPlayerFlags(v: Int) = set(playerFlags, v)
 
+    private val bufferMs = intPreferencesKey("buffer_ms")
     fun getBufferMsFlow() = flow(bufferMs, Xmp.DEFAULT_BUFFER_MS)
     suspend fun setBufferMs(v: Int) = set(bufferMs, v)
 
+    private val defaultPan = intPreferencesKey("default_pan")
     fun getDefaultPanFlow() = flow(defaultPan, Xmp.DEFAULT_PAN_SEPARATION)
     suspend fun setDefaultPan(v: Int) = set(defaultPan, v)
 
+    private val stereoMix = intPreferencesKey("stereo_mix")
     fun getStereoMixFlow() = flow(stereoMix, Xmp.DEFAULT_STEREO_MIX)
     suspend fun setStereoMix(v: Int) = set(stereoMix, v)
 
+    private val dspEffects = intPreferencesKey("dsp_effects")
     fun getDspEffectFlow() = flow(dspEffects, Xmp.XMP_DSP_LOWPASS)
     suspend fun setDspEffect(v: Int) = set(dspEffects, v)
 
+    private val interpolationType = intPreferencesKey("interpolation_type")
     fun getInterpolationTypeFlow() = flow(interpolationType, Xmp.DEFAULT_INTERPOLATION)
     suspend fun setInterpolationType(v: Int) = set(interpolationType, v)
 
+    private val playerVolume = intPreferencesKey("player_volume")
     fun getPlayerVolumeFlow() = flow(playerVolume, Xmp.DEFAULT_PLAYER_VOLUME)
     suspend fun setPlayerVolume(v: Int) = set(playerVolume, v)
 
+    private val volumeBoost = intPreferencesKey("volume_boost")
     fun getVolumeBoostFlow() = flow(volumeBoost, Xmp.DEFAULT_VOLUME_BOOST)
     suspend fun setVolumeBoost(v: Int) = set(volumeBoost, v)
 
+    private val playerFormat = intPreferencesKey("player_format")
+    fun getPlayerFormatFlow(): Flow<Int> = flow(playerFormat, 0)
+    suspend fun setPlayerFormat(v: Int) = set(playerFormat, v)
+
+    /* Oboe */
+    private val oboePerfMode = intPreferencesKey("oboe_perf_mode")
+    fun getOboePerfModeFlow() = flow(oboePerfMode, Xmp.OBOE_PERFMODE_LOWLATENCY)
+    suspend fun setOboePerfMode(v: Int) = set(oboePerfMode, v)
+
+    private val oboeChannelsCount = intPreferencesKey("oboe_channels_count")
+    fun getOboeChannelsFlow() = flow(oboeChannelsCount, Xmp.OBOE_CHANNELS_STEREO)
+    suspend fun setOboeChannels(v: Int) = set(oboeChannelsCount, v)
+
+    private val oboeAudioApi = intPreferencesKey("oboe_audio_api")
+    fun getOboeAudioApiFlow() = flow(oboeAudioApi, Xmp.OBOE_AUDIO_API_UNSPECIFIED)
+    suspend fun setOboeAudioApi(v: Int) = set(oboeAudioApi, v)
+
     /* Playback */
+    private val autoResume = booleanPreferencesKey("auto_resume")
     fun getAutoResumeFlow() = flow(autoResume, false)
     suspend fun getAutoResume() = get(autoResume, false)
     suspend fun setAutoResume(v: Boolean) = set(autoResume, v)
 
+    private val queueJson = stringPreferencesKey("queue_json")
+    private val queueIndex = intPreferencesKey("queue_index")
+    private val queueShuffle = booleanPreferencesKey("queue_shuffle")
+    private val queueRepeat = intPreferencesKey("queue_repeat")
+    private val queuePositionMs = longPreferencesKey("queue_position_ms")
     suspend fun saveQueueState(
         json: String,
         index: Int,
