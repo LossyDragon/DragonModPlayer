@@ -26,27 +26,31 @@ data class NoteCell(
     val isEmpty: Boolean
         get() = note == 0 && instrument == 0 && fxType < 0
 
-    val noteStr: String
-        get() = when (note) {
-            0 -> "---"
+    val noteStr: String = when {
+        note == 0 -> "---"
 
-            0x80 -> "==="
+        note == 0x80 -> "==="
 
-            0x81 -> "^^^"
+        note == 0x81 -> "^^^"
 
-            in 1..127 -> {
-                val n = note - 1
-                "${NOTE_NAMES[n % 12]}${n / 12}"
-            }
-
-            else -> "???"
+        note in 1..127 -> {
+            val n = note - 1
+            "${NOTE_NAMES[n % 12]}${n / 12}"
         }
 
-    val instrumentStr: String
-        get() = if (instrument > 0) "%02X".format(instrument) else ".."
+        else -> "???"
+    }
 
-    val effectStr: String
-        get() = if (fxType >= 0) "%c%02X".format(effectChar(fxType), fxParam) else "..."
+    val instrumentStr: String =
+        if (instrument > 0) "%02X".format(instrument) else ".."
+
+    val effectTypeChar: String =
+        if (fxType >= 0) effectChar(fxType).toString() else "."
+
+    val effectParamStr: String =
+        if (fxType >= 0) "%02X".format(fxParam) else ".."
+
+    // val effectStr: String = effectTypeChar + effectParamStr
 
     companion object {
         private val NOTE_NAMES = arrayOf(
@@ -54,9 +58,9 @@ data class NoteCell(
             "F#", "G-", "G#", "A-", "A#", "B-",
         )
 
-        private fun effectChar(effect: Int): Char = when (effect) {
-            in 0..9 -> '0' + effect
-            in 10..35 -> 'A' + (effect - 10)
+        private fun effectChar(effect: Int): Char = when {
+            effect in 0..9 -> '0' + effect
+            effect in 10..35 -> 'A' + (effect - 10)
             else -> '?'
         }
     }
