@@ -36,6 +36,10 @@ class PlayerViewModel(
         field = MutableStateFlow(PlayerUiState())
 
     init {
+        prefs.getRowNumbersFlow().onEach { show ->
+            state.update { it.copy(showRowNumbers = show) }
+        }.launchIn(viewModelScope)
+
         player.frameFlow.onEach { frame ->
             frame ?: return@onEach
             state.update {
@@ -46,10 +50,6 @@ class PlayerViewModel(
                 )
             }
         }.launchIn(viewModelScope)
-
-        player.moduleLoadedFlow
-            .onEach { syncModuleInfo() }
-            .launchIn(viewModelScope)
 
         player.currentSequenceFlow
             .onEach { state.update { s -> s.copy(currentSequence = it) } }
@@ -127,6 +127,7 @@ class PlayerViewModel(
     fun getAudioStats(): String = Xmp.getAudioStats().let { stats ->
         """
         Audio API: ${stats.audioApi}
+        Audio Format: ${stats.audioFormat}
         Audio Glitches: ${stats.xrunCount} (system), ${stats.underrunCount} (app)
         Buffer: ${stats.bufferSize} / ${stats.bufferCapacity} frames
         Frames Per Burst: ${stats.framesPerBurst}

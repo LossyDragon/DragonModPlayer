@@ -358,6 +358,7 @@ private fun PlayerScreenContent(
                     modifier = Modifier.fillMaxSize().padding(contentPadding),
                     pattern = patternData,
                     currentRow = state.frame.row,
+                    showRowNumbers = state.showRowNumbers,
                 )
 
                 // TODO add a tap to click to choose between current and future screens.

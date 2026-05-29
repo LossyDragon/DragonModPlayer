@@ -87,7 +87,7 @@ fun PatternView(
     currentRow: Int,
     modifier: Modifier = Modifier,
     colors: PatternColors = rememberDefaultPatternColors(),
-    rowNumberHex: Boolean = true
+    showRowNumbers: Boolean
 ) {
     // Zoom + pan state
     var zoom by remember { mutableFloatStateOf(1f) }
@@ -232,7 +232,7 @@ fun PatternView(
         )
 
         // Pre-pick which array of pre-formatted row texts to use
-        val rowTexts = if (rowNumberHex) renderState.rowTextsHex else renderState.rowTextsDec
+        val rowTexts = if (showRowNumbers) renderState.rowTextsDec else renderState.rowTextsHex
 
         // Row numbers — clipped to row-number column only
         clipRect(
@@ -402,7 +402,7 @@ private fun PreviewPatternView() {
             pattern = sample,
             currentRow = 12,
             modifier = Modifier.size(400.dp, 600.dp),
-            rowNumberHex = false,
+            showRowNumbers = false,
         )
     }
 }

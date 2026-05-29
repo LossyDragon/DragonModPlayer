@@ -55,12 +55,7 @@ class ModPlayer(
     private var hasFocus = false
 
     private val artworkUri: Uri by lazy {
-        Uri.Builder()
-            .scheme(ContentResolver.SCHEME_ANDROID_RESOURCE)
-            .authority(context.packageName)
-            .appendPath(context.resources.getResourceEntryName(R.drawable.ic_launcher_background))
-            .appendPath(context.resources.getResourceTypeName(R.drawable.ic_launcher_foreground))
-            .build()
+        "android.resource://${context.packageName}/${R.drawable.ic_launcher_foreground}".toUri()
     }
 
     @Volatile
@@ -416,7 +411,13 @@ class ModPlayer(
             .setRepeatMode(repeatMode)
             .setCurrentMediaItemIndex(currentIndex)
             .setPlayWhenReady(engine.isPlaying.value, PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST)
-            .setPlaybackState(if (playlist.isEmpty()) STATE_IDLE else STATE_READY)
+            .setPlaybackState(
+                when {
+                    playlist.isEmpty() -> STATE_IDLE
+                    engine.endedNaturally -> STATE_ENDED
+                    else -> STATE_READY
+                }
+            )
             .setContentPositionMs(position)
             .build()
     }

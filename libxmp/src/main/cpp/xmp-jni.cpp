@@ -1212,7 +1212,7 @@ JNIEXPORT jobject JNICALL JNI_FUNCTION(getAudioStats)(JNIEnv *env, jobject obj) 
     if (!statsClass) return nullptr;
 
     jmethodID constructor = env->GetMethodID(statsClass, "<init>",
-                                             "(IIIIIILjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+                                             "(IIIIIILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
     if (!constructor) {
         env->DeleteLocalRef(statsClass);
         return nullptr;
@@ -1223,16 +1223,17 @@ JNIEXPORT jobject JNICALL JNI_FUNCTION(getAudioStats)(JNIEnv *env, jobject obj) 
     jstring apiStr = env->NewStringUTF(stats.audio_api ? stats.audio_api : "");
     jstring modeStr = env->NewStringUTF(stats.sharing_mode ? stats.sharing_mode : "");
     jstring perfStr = env->NewStringUTF(stats.perf_mode ? stats.perf_mode : "");
-
-    jobject statsObj =
-            env->NewObject(statsClass, constructor, stats.xrun_count, stats.underrun_count,
-                           stats.frames_per_burst, stats.buffer_capacity, stats.buffer_size,
-                           stats.sample_rate, apiStr, modeStr, perfStr);
+    jstring formatStr = env->NewStringUTF(stats.audio_format ? stats.audio_format : "");
+    jobject statsObj = env->NewObject(
+            statsClass, constructor, stats.xrun_count, stats.underrun_count,
+            stats.frames_per_burst, stats.buffer_capacity, stats.buffer_size,
+            stats.sample_rate, apiStr, modeStr, perfStr, formatStr);
 
     env->DeleteLocalRef(apiStr);
     env->DeleteLocalRef(modeStr);
     env->DeleteLocalRef(perfStr);
     env->DeleteLocalRef(statsClass);
+    env->DeleteLocalRef(formatStr);
     return statsObj;
 }
 

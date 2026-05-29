@@ -28,6 +28,8 @@ fun PreferencePlayer(
 
     val autoResume by prefs.getAutoResumeFlow()
         .collectAsStateWithLifecycle(initialValue = false)
+    val rowNumbers by prefs.getRowNumbersFlow()
+        .collectAsStateWithLifecycle(initialValue = false)
 
     PreferenceSection(
         title = {
@@ -46,7 +48,15 @@ fun PreferencePlayer(
                 state = autoResume,
                 onCheckedChange = { scope.launch { prefs.setAutoResume(it) } },
                 colors = colors,
-                shapes = ListItemDefaults.segmentedShapes(0, 11),
+                shapes = ListItemDefaults.segmentedShapes(0, 2),
+            )
+            SettingsSwitch(
+                title = { Text("Show decimal row numbers") },
+                subtitle = { Text("Show decimal row numbers instead of hex.") },
+                state = rowNumbers,
+                onCheckedChange = { scope.launch { prefs.setRowNumbers(it) } },
+                colors = colors,
+                shapes = ListItemDefaults.segmentedShapes(1, 2),
             )
         }
     )

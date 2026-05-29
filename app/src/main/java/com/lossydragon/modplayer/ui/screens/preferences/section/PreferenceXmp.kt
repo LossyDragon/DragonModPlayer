@@ -210,7 +210,7 @@ fun PreferenceXmp(
                 },
                 action = { Text(text = "$sampleRate Hz") },
                 colors = colors,
-                shapes = ListItemDefaults.segmentedShapes(1, 11),
+                shapes = ListItemDefaults.segmentedShapes(0, 10),
                 onClick = { isSampleRateShowing = true }
             )
             SettingsMenuLink(
@@ -222,92 +222,8 @@ fun PreferenceXmp(
                 },
                 action = { Text(formatFlagsLabel(formatFlags)) },
                 colors = colors,
-                shapes = ListItemDefaults.segmentedShapes(2, 11),
+                shapes = ListItemDefaults.segmentedShapes(1, 10),
                 onClick = { showFormatDialog = true },
-            )
-            SettingsSlider(
-                title = { Text(text = "Buffer Milliseconds") },
-                subtitle = {
-                    Text(
-                        text = "Audio buffer size. Smaller = lower latency but risk of glitches. " +
-                            "Applies on next track."
-                    )
-                },
-                action = { Text(text = "$bufferMs ms") },
-                colors = colors,
-                steps = ((Xmp.MAX_BUFFER_MS - Xmp.MIN_BUFFER_MS) / 40) - 1, // = 22
-                valueRange = Xmp.MIN_BUFFER_MS.toFloat()..Xmp.MAX_BUFFER_MS.toFloat(),
-                value = bufferMs.toFloat(),
-                onValueChange = { value ->
-                    scope.launch { prefs.setBufferMs(value.toInt()) }
-                },
-                shapes = ListItemDefaults.segmentedShapes(3, 11),
-            )
-            SettingsSlider(
-                title = { Text("Player Volume") },
-                subtitle = { Text("Master output volume (%).") },
-                action = { Text("$volume%") },
-                colors = colors,
-                steps = 0,
-                valueRange = 0f..100f,
-                value = volume.toFloat(),
-                onValueChange = { value ->
-                    scope.launch { prefs.setPlayerVolume(value.toInt()) }
-                },
-                shapes = ListItemDefaults.segmentedShapes(4, 11),
-            )
-            SettingsSlider(
-                title = { Text("Amplification") },
-                subtitle = {
-                    Text(
-                        "Pre-mix gain factor (0=quiet, 1=normal, 2–3=boost). May clip at high values."
-                    )
-                },
-                action = { Text("${boost}x") },
-                colors = colors,
-                steps = 2,
-                valueRange = 0f..3f,
-                value = boost.toFloat(),
-                onValueChange = { value ->
-                    scope.launch { prefs.setVolumeBoost(value.toInt()) }
-                },
-                shapes = ListItemDefaults.segmentedShapes(5, 11),
-            )
-            SettingsSlider(
-                title = { Text(text = "Stereo Mixing") },
-                subtitle = {
-                    Text(
-                        text = "Stereo separation (%). 0=mono, " +
-                            "100=full stereo, negative=channel swap."
-                    )
-                },
-                action = { Text(text = "$mix%") },
-                colors = colors,
-                steps = 0,
-                valueRange = -100f..100f,
-                value = mix.toFloat(),
-                onValueChange = { value ->
-                    scope.launch { prefs.setStereoMix(value.toInt()) }
-                },
-                shapes = ListItemDefaults.segmentedShapes(6, 11),
-            )
-            SettingsSlider(
-                title = { Text(text = "Pan Separation") },
-                subtitle = {
-                    Text(
-                        text = "Left/right pan width for stereo formats (%). " +
-                            "0=mono, 100=hard pan. Applies on next track."
-                    )
-                },
-                action = { Text(text = "$pan%") },
-                colors = colors,
-                steps = 4,
-                valueRange = 0f..100f,
-                value = pan.toFloat(),
-                onValueChange = { value ->
-                    scope.launch { prefs.setDefaultPan(value.toInt()) }
-                },
-                shapes = ListItemDefaults.segmentedShapes(7, 11),
             )
             SettingsMenuLink(
                 title = { Text("Interpolation") },
@@ -327,21 +243,8 @@ fun PreferenceXmp(
                     )
                 },
                 colors = colors,
-                shapes = ListItemDefaults.segmentedShapes(8, 11),
+                shapes = ListItemDefaults.segmentedShapes(2, 10),
                 onClick = { isInterpShowing = true }
-            )
-            SettingsSwitch(
-                title = { Text("Lowpass Filter") },
-                subtitle = { Text("Lowpass DSP smoothing high frequencies.") },
-                state = dspEffect != Xmp.XMP_DSP_NONE,
-                onCheckedChange = { enabled ->
-                    scope.launch {
-                        val value = if (enabled) Xmp.XMP_DSP_LOWPASS else Xmp.XMP_DSP_NONE
-                        prefs.setDspEffect(value)
-                    }
-                },
-                colors = colors,
-                shapes = ListItemDefaults.segmentedShapes(9, 11),
             )
             SettingsMenuLink(
                 title = { Text("Player Flags") },
@@ -355,8 +258,105 @@ fun PreferenceXmp(
                     Text(text = if (count == 0) "None" else "$count enabled")
                 },
                 colors = colors,
-                shapes = ListItemDefaults.segmentedShapes(10, 11),
+                shapes = ListItemDefaults.segmentedShapes(3, 10),
                 onClick = { isFlagsShowing = true }
+            )
+            SettingsSwitch(
+                title = { Text("Lowpass Filter") },
+                subtitle = { Text("Lowpass DSP smoothing high frequencies.") },
+                state = dspEffect != Xmp.XMP_DSP_NONE,
+                onCheckedChange = { enabled ->
+                    scope.launch {
+                        val value = if (enabled) Xmp.XMP_DSP_LOWPASS else Xmp.XMP_DSP_NONE
+                        prefs.setDspEffect(value)
+                    }
+                },
+                colors = colors,
+                shapes = ListItemDefaults.segmentedShapes(4, 10),
+            )
+            SettingsSlider(
+                title = { Text(text = "Buffer Milliseconds") },
+                subtitle = {
+                    Text(
+                        text = "Audio buffer size. Smaller = lower latency but risk of glitches. " +
+                            "Applies on next track."
+                    )
+                },
+                action = { Text(text = "$bufferMs ms") },
+                colors = colors,
+                steps = ((Xmp.MAX_BUFFER_MS - Xmp.MIN_BUFFER_MS) / 40) - 1, // = 22
+                valueRange = Xmp.MIN_BUFFER_MS.toFloat()..Xmp.MAX_BUFFER_MS.toFloat(),
+                value = bufferMs.toFloat(),
+                onValueChange = { value ->
+                    scope.launch { prefs.setBufferMs(value.toInt()) }
+                },
+                shapes = ListItemDefaults.segmentedShapes(5, 10),
+            )
+            SettingsSlider(
+                title = { Text("Player Volume") },
+                subtitle = { Text("Master output volume (%).") },
+                action = { Text("$volume%") },
+                colors = colors,
+                steps = 0,
+                valueRange = 0f..100f,
+                value = volume.toFloat(),
+                onValueChange = { value ->
+                    scope.launch { prefs.setPlayerVolume(value.toInt()) }
+                },
+                shapes = ListItemDefaults.segmentedShapes(6, 10),
+            )
+            SettingsSlider(
+                title = { Text("Amplification") },
+                subtitle = {
+                    Text(
+                        "Pre-mix gain factor (0=quiet, 1=normal, 2–3=boost). May clip at high values."
+                    )
+                },
+                action = { Text("${boost}x") },
+                colors = colors,
+                steps = 2,
+                valueRange = 0f..3f,
+                value = boost.toFloat(),
+                onValueChange = { value ->
+                    scope.launch { prefs.setVolumeBoost(value.toInt()) }
+                },
+                shapes = ListItemDefaults.segmentedShapes(7, 10),
+            )
+            SettingsSlider(
+                title = { Text(text = "Stereo Mixing") },
+                subtitle = {
+                    Text(
+                        text = "Stereo separation (%). 0=mono, " +
+                            "100=full stereo, negative=channel swap."
+                    )
+                },
+                action = { Text(text = "$mix%") },
+                colors = colors,
+                steps = 0,
+                valueRange = -100f..100f,
+                value = mix.toFloat(),
+                onValueChange = { value ->
+                    scope.launch { prefs.setStereoMix(value.toInt()) }
+                },
+                shapes = ListItemDefaults.segmentedShapes(8, 10),
+            )
+            SettingsSlider(
+                title = { Text(text = "Pan Separation") },
+                subtitle = {
+                    Text(
+                        text = "Left/right pan width for stereo formats (%). " +
+                            "0=mono, 100=hard pan. Applies on next track."
+                    )
+                },
+                action = { Text(text = "$pan%") },
+                colors = colors,
+                steps = 4,
+                valueRange = 0f..100f,
+                value = pan.toFloat(),
+                onValueChange = { value ->
+                    scope.launch { prefs.setDefaultPan(value.toInt()) }
+                },
+                shapes = ListItemDefaults.segmentedShapes(9, 10),
             )
         }
     )

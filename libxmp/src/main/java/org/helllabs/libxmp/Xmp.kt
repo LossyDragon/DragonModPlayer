@@ -216,12 +216,6 @@ object Xmp {
 
     external fun setExpectSilence(value: Boolean)
 
-    /**
-     * Helper to get formats
-     */
-    val formatsSorted: List<String>
-        get() = getFormats().sorted()
-
     fun testFromFd(context: Context, uri: Uri, modInfo: ModInfo = ModInfo()): Boolean {
         Log.d(TAG, "Testing: $uri")
         return context.contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->

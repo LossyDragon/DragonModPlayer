@@ -54,12 +54,7 @@ class PlayerService : MediaLibraryService() {
 
     /** App icon URI used as artwork in the notification and Auto browse tree. */
     private val artworkUri: Uri by lazy {
-        Uri.Builder()
-            .scheme(ContentResolver.SCHEME_ANDROID_RESOURCE)
-            .authority(packageName)
-            .appendPath(resources.getResourceEntryName(R.drawable.ic_launcher_background))
-            .appendPath(resources.getResourceTypeName(R.drawable.ic_launcher_foreground))
-            .build()
+        "android.resource://$packageName/${R.drawable.ic_launcher_foreground}".toUri()
     }
 
     private val libraryCallback = object : MediaLibrarySession.Callback {

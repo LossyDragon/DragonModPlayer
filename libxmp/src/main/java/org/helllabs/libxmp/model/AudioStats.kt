@@ -38,4 +38,5 @@ data class AudioStats(
     val audioApi: String = "",
     val sharingMode: String = "",
     val perfMode: String = "",
+    val audioFormat: String = "",
 )

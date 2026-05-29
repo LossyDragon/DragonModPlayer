@@ -122,6 +122,10 @@ class AppPreferences(context: Context) {
     suspend fun getAutoResume() = get(autoResume, false)
     suspend fun setAutoResume(v: Boolean) = set(autoResume, v)
 
+    private val showRowNumbers = booleanPreferencesKey("show_row_numbers")
+    fun getRowNumbersFlow() = flow(showRowNumbers, false)
+    suspend fun setRowNumbers(v: Boolean) = set(showRowNumbers, v)
+
     private val queueJson = stringPreferencesKey("queue_json")
     private val queueIndex = intPreferencesKey("queue_index")
     private val queueShuffle = booleanPreferencesKey("queue_shuffle")

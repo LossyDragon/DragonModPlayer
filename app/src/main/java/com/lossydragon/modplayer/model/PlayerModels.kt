@@ -33,5 +33,6 @@ data class PlayerUiState(
     val numChannels: Int = 0,
     val numInstruments: Int = 0,
     val numSamples: Int = 0,
-    val numSequences: Int = 0
+    val numSequences: Int = 0,
+    val showRowNumbers: Boolean = false
 )

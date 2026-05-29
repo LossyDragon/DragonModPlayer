@@ -229,20 +229,20 @@ fun PreferenceInterface(
                 shapes = ListItemDefaults.segmentedShapes(0, 3),
                 onClick = { isThemeStyleShowing = true }
             )
-            SettingsSwitch(
-                title = { Text(text = "AMOLED Mode") },
-                subtitle = { Text(text = amoled.toString()) },
-                colors = colors,
-                shapes = ListItemDefaults.segmentedShapes(1, 3),
-                state = amoled,
-                onCheckedChange = { scope.launch { prefs.setAppThemeAmoled(it) } }
-            )
             SettingsMenuLink(
                 title = { Text(text = "Theme Color") },
                 subtitle = { Text(text = color.toHex()) },
                 colors = colors,
-                shapes = ListItemDefaults.segmentedShapes(2, 3),
+                shapes = ListItemDefaults.segmentedShapes(1, 3),
                 onClick = { isThemeColorShowing = true }
+            )
+            SettingsSwitch(
+                title = { Text(text = "AMOLED Mode") },
+                subtitle = { Text(text = amoled.toString()) },
+                colors = colors,
+                shapes = ListItemDefaults.segmentedShapes(2, 3),
+                state = amoled,
+                onCheckedChange = { scope.launch { prefs.setAppThemeAmoled(it) } }
             )
         }
     )

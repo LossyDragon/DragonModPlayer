@@ -17,6 +17,7 @@ struct AudioStats {
   const char* audio_api;
   const char* sharing_mode;
   const char* perf_mode;
+  const char* audio_format;
 };
 
 void drop_audio(void);

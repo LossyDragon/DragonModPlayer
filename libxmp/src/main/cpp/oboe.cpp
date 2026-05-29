@@ -1,12 +1,12 @@
 #include "audio.h"
-#include <oboe/Oboe.h>
 #include <android/log.h>
+#include <atomic>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
+#include <oboe/Oboe.h>
 #include <pthread.h>
 #include <stdatomic.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <atomic>
 
 #define TAG "libxmp Oboe"
 #define LOG_INFO(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
@@ -35,10 +35,11 @@ class XmpAudioCallback : public oboe::AudioStreamDataCallback,
 public:
     XmpAudioCallback(char *buf, int bufSize, int bufNum, atomic_int *firstFree,
                      atomic_int *lastFree, std::atomic<float> *volScale,
-                     std::atomic<int32_t> *underrunCount)
+                     std::atomic<int32_t> *underrunCount, int formatFlags)
             : buffer(buf), buffer_size(bufSize), buffer_num(bufNum), first_free(firstFree),
               last_free(lastFree), volume_scale(*volScale), underrun_count_(*underrunCount),
-              buffer_position(0) {}
+              buffer_position(0), xmp_format_flags(formatFlags),
+              oboe_bytes_per_sample((formatFlags & (1 << 3)) ? sizeof(int32_t) : sizeof(int16_t)) {}
 
     oboe::DataCallbackResult
     onAudioReady(oboe::AudioStream *audioStream, void *audioData, int32_t numFrames) override {
@@ -47,10 +48,9 @@ public:
 
         if (++callback_count >= 1000) {
             callback_count = 0;
-
             if (audioStream->isXRunCountSupported()) {
                 oboe::ResultWithValue<int32_t> xRunResult = audioStream->getXRunCount();
-                if (xRunResult) { // Operator bool checks if result is OK
+                if (xRunResult) {
                     int32_t current_xruns = xRunResult.value();
                     if (current_xruns != last_xrun_count) {
                         LOG_WARN("XRuns detected: %d (new: %d)", current_xruns,
@@ -61,57 +61,105 @@ public:
             }
         }
 
-        int16_t *outputBuffer = static_cast<int16_t *>(audioData);
-        int32_t samplesRequested = numFrames * audioStream->getChannelCount();
-        int32_t bytesRequested = samplesRequested * sizeof(int16_t);
-        int32_t bytesCopied = 0;
+        const bool is_8bit = (xmp_format_flags & (1 << 0)) != 0;
+        const bool is_32bit = (xmp_format_flags & (1 << 3)) != 0;
+        const bool is_unsigned = (xmp_format_flags & (1 << 1)) != 0;
 
-        while (bytesCopied < bytesRequested) {
+        // Source bytes per sample
+        const int src_bytes_per_sample = is_8bit ? 1 : is_32bit ? 4 : 2;
+
+        auto *dst16 = static_cast<int16_t *>(audioData);
+
+        const int32_t outputFrames = numFrames * audioStream->getChannelCount();
+        const int32_t outputBytes = outputFrames * oboe_bytes_per_sample;
+
+        int32_t outputBytesCopied = 0;
+
+        while (outputBytesCopied < outputBytes) {
             int lf = atomic_load_int(last_free);
             int ff = atomic_load_int(first_free);
 
-            // Check if we have data available
             if (lf == ff) {
-                int32_t remainingBytes = bytesRequested - bytesCopied;
+                int32_t remaining = outputBytes - outputBytesCopied;
                 if (!expect_silence.load(std::memory_order_relaxed)) {
-                    LOG_WARN("UNDERRUN: No audio data available, filling %d bytes with silence",
-                             remainingBytes);
+                    LOG_WARN("UNDERRUN: filling %d bytes with silence", remaining);
                     underrun_count_.fetch_add(1, std::memory_order_relaxed);
                 }
-                memset(&outputBuffer[bytesCopied / sizeof(int16_t)], 0, remainingBytes);
+                memset(reinterpret_cast<char *>(dst16) + outputBytesCopied, 0, remaining);
                 return oboe::DataCallbackResult::Continue;
             }
 
-            // Read from current position in current buffer
-            char *source = &buffer[lf * buffer_size + buffer_position];
-            int32_t bytesAvailableInBuffer = buffer_size - buffer_position;
-            int32_t bytesToCopy =
-                    (bytesRequested - bytesCopied) < bytesAvailableInBuffer ? (bytesRequested -
-                                                                               bytesCopied)
-                                                                            : bytesAvailableInBuffer;
+            // How many output samples we still need
+            int32_t outputSamplesNeeded = (outputBytes - outputBytesCopied) / oboe_bytes_per_sample;
 
-            // Apply volume scaling while copying
+            // How many source samples are available in current buffer
+            int32_t srcBytesAvailable = buffer_size - buffer_position;
+            int32_t srcSamplesAvailable = srcBytesAvailable / src_bytes_per_sample;
+
+            int32_t samplesToProcess = std::min(outputSamplesNeeded, srcSamplesAvailable);
+
+            char *src = &buffer[lf * buffer_size + buffer_position];
+            int16_t *dst = dst16 + (outputBytesCopied / sizeof(int16_t));
             float vol = volume_scale.load(std::memory_order_relaxed);
-            int16_t *src16 = (int16_t *) source;
-            int16_t *dst16 = &outputBuffer[bytesCopied / sizeof(int16_t)];
-            int samplesToCopy = bytesToCopy / sizeof(int16_t);
 
-            if (vol >= 0.99f) {
-                memcpy(dst16, src16, bytesToCopy);
-            } else {
-                for (int i = 0; i < samplesToCopy; i++) {
-                    dst16[i] = (int16_t) (src16[i] * vol);
+            if (is_8bit) {
+                if (is_unsigned) {
+                    // Unsigned 8-bit: 0..255 to -32768..32767
+                    auto *src8 = reinterpret_cast<uint8_t *>(src);
+                    for (int i = 0; i < samplesToProcess; i++) {
+                        auto s = (int16_t) ((src8[i] - 128) << 8);
+                        dst[i] = (vol >= 0.99f) ? s : (int16_t) (s * vol);
+                    }
+                } else {
+                    // Signed 8-bit: -128..127 to -32768..32767
+                    auto *src8 = reinterpret_cast<int8_t *>(src);
+                    for (int i = 0; i < samplesToProcess; i++) {
+                        int16_t s = (int16_t) (src8[i] << 8);
+                        dst[i] = (vol >= 0.99f) ? s : (int16_t) (s * vol);
+                    }
                 }
+                buffer_position += samplesToProcess;
+                outputBytesCopied += samplesToProcess * sizeof(int16_t);
+
+            } else if (is_32bit) {
+                auto *src32 = reinterpret_cast<int32_t *>(src);
+                auto *dst32 = reinterpret_cast<int32_t *>(audioData) +
+                              (outputBytesCopied / sizeof(int32_t));
+                if (vol >= 0.99f) {
+                    memcpy(dst32, src32, samplesToProcess * sizeof(int32_t));
+                } else {
+                    for (int i = 0; i < samplesToProcess; i++) {
+                        dst32[i] = (int32_t) (src32[i] * vol);
+                    }
+                }
+                buffer_position += samplesToProcess * sizeof(int32_t);
+                outputBytesCopied += samplesToProcess * sizeof(int32_t);
+            } else {
+                // 16-bit (signed or unsigned)
+                if (is_unsigned) {
+                    auto *src16u = reinterpret_cast<uint16_t *>(src);
+                    for (int i = 0; i < samplesToProcess; i++) {
+                        auto s = (int16_t) (src16u[i] - 32768);
+                        dst[i] = (vol >= 0.99f) ? s : (int16_t) (s * vol);
+                    }
+                } else {
+                    auto *src16 = reinterpret_cast<int16_t *>(src);
+                    if (vol >= 0.99f) {
+                        memcpy(dst, src16, samplesToProcess * sizeof(int16_t));
+                    } else {
+                        for (int i = 0; i < samplesToProcess; i++) {
+                            dst[i] = (int16_t) (src16[i] * vol);
+                        }
+                    }
+                }
+                buffer_position += samplesToProcess * sizeof(int16_t);
+                outputBytesCopied += samplesToProcess * sizeof(int16_t);
             }
 
-            bytesCopied += bytesToCopy;
-            buffer_position += bytesToCopy;
-
-            // If we've consumed the entire buffer, move to next one
+            // Consumed entire source buffer — advance to next
             if (buffer_position >= buffer_size) {
                 buffer_position = 0;
-                int next_buffer = (lf + 1) % buffer_num;
-                atomic_store_int(last_free, next_buffer);
+                atomic_store_int(last_free, (lf + 1) % buffer_num);
             }
         }
 
@@ -127,85 +175,79 @@ public:
     }
 
 private:
-    char *buffer;
-    int buffer_size;
-    int buffer_num;
     atomic_int *first_free;
     atomic_int *last_free;
+    char *buffer;
+    int buffer_num;
+    int buffer_position; // Tracks position within current buffer (in bytes)
+    int buffer_size;
+    int oboe_bytes_per_sample;
+    int xmp_format_flags;
     std::atomic<float> &volume_scale;
     std::atomic<int32_t> &underrun_count_;
-    int buffer_position; // Tracks position within current buffer (in bytes)
 };
 
-static std::shared_ptr<oboe::AudioStream> audio_stream;
 static XmpAudioCallback *audio_callback = nullptr;
 static atomic_int first_free;
 static atomic_int last_free;
 static char *buffer = nullptr;
+static int actual_channels = 2;
 static int buffer_num;
 static int buffer_size;
 static pthread_mutex_t mutex;
 static std::atomic<float> volume_scale(1.0f);
 static std::atomic<int32_t> underrun_count(0);
-static int actual_channels = 2;
+static std::shared_ptr<oboe::AudioStream> audio_stream;
 
-static int oboe_open(int sample_rate, int num, char *buf, int buf_size, int performance_mode,
-                     int channel_count, int audio_api) {
+static int oboe_open(int sample_rate, int num, char *buf, int buf_size,
+                     int performance_mode, int channel_count, int audio_api,
+                     int format_flags) {
     oboe::AudioStreamBuilder builder;
-
-    // Initialize mutex
-    // if (pthread_mutex_init(&mutex, nullptr) != 0) {
-    //   LOG_ERROR("Failed to initialize mutex");
-    //   return -1;
-    // }
 
     // Create callback with the buffer that's already allocated
     audio_callback = new XmpAudioCallback(buf, buf_size, num, &first_free, &last_free,
-                                          &volume_scale, &underrun_count);
+                                          &volume_scale, &underrun_count, format_flags);
 
-    oboe::PerformanceMode pMode;
-    switch (performance_mode) {
-        case 1:
-            pMode = oboe::PerformanceMode::None;
-            break;
-        case 2:
-            pMode = oboe::PerformanceMode::PowerSaving;
-            break;
-        default:
-            pMode = oboe::PerformanceMode::LowLatency;
-    }
+    const auto pMode = [&]() -> oboe::PerformanceMode {
+        switch (performance_mode) {
+            case 1:
+                return oboe::PerformanceMode::None;
+            case 2:
+                return oboe::PerformanceMode::PowerSaving;
+            default:
+                return oboe::PerformanceMode::LowLatency;
+        }
+    }();
 
-    oboe::ChannelCount cCount;
-    switch (channel_count) { // NOLINT(*-multiway-paths-covered)
-        case 1:
-            cCount = oboe::ChannelCount::Mono;
-            break;
-        default:
-            cCount = oboe::ChannelCount::Stereo;
-    }
+    const auto cCount = (channel_count == 1)
+                        ? oboe::ChannelCount::Mono
+                        : oboe::ChannelCount::Stereo;
 
-    oboe::AudioApi aApi;
-    switch (audio_api) {
-        case 1:
-            aApi = oboe::AudioApi::AAudio;
-            break;
-        case 2:
-            aApi = oboe::AudioApi::OpenSLES;
-            break;
-        default:
-            aApi = oboe::AudioApi::Unspecified;
-    }
+    const auto aApi = [&]() -> oboe::AudioApi {
+        switch (audio_api) {
+            case 1:
+                return oboe::AudioApi::AAudio;
+            case 2:
+                return oboe::AudioApi::OpenSLES;
+            default:
+                return oboe::AudioApi::Unspecified;
+        }
+    }();
+
+    const auto oboeFormat = (format_flags & (1 << 3))
+                            ? oboe::AudioFormat::I32
+                            : oboe::AudioFormat::I16;
 
     // Configure stream - request sample rate but Oboe may override
     builder.setDirection(oboe::Direction::Output)
-            ->setPerformanceMode(pMode)
-            ->setSharingMode(oboe::SharingMode::Shared)
-            ->setFormat(oboe::AudioFormat::I16)
+            ->setAudioApi(aApi)
             ->setChannelCount(cCount)
-            ->setSampleRate(sample_rate)
             ->setDataCallback(audio_callback)
             ->setErrorCallback(audio_callback)
-            ->setAudioApi(aApi);
+            ->setFormat(oboeFormat)
+            ->setPerformanceMode(pMode)
+            ->setSampleRate(sample_rate)
+            ->setSharingMode(oboe::SharingMode::Shared);
 
     // Open stream
     oboe::Result result = builder.openStream(audio_stream);
@@ -213,26 +255,35 @@ static int oboe_open(int sample_rate, int num, char *buf, int buf_size, int perf
         LOG_ERROR("Failed to open stream: %s", oboe::convertToText(result));
         delete audio_callback;
         audio_callback = nullptr;
-        // pthread_mutex_destroy(&mutex);
         return -1;
     }
 
     actual_channels = audio_stream->getChannelCount();
 
+    const char *sharingMode = (audio_stream->getSharingMode() == oboe::SharingMode::Exclusive)
+                              ? "Exclusive"
+                              : "Shared";
+
     LOG_INFO("Stream opened: rate=%d, burst=%d, capacity=%d, sharingMode=%s, channels=%d",
              audio_stream->getSampleRate(),
              audio_stream->getFramesPerBurst(),
              audio_stream->getBufferCapacityInFrames(),
-             audio_stream->getSharingMode() == oboe::SharingMode::Exclusive ? "Exclusive"
-                                                                            : "Shared",
+             sharingMode,
              actual_channels);
 
     // Log which audio API is being used
-    oboe::AudioApi audioApi = audio_stream->getAudioApi();
-    const char *apiName = (audioApi == oboe::AudioApi::AAudio) ? "AAudio" : (audioApi ==
-                                                                             oboe::AudioApi::OpenSLES)
-                                                                            ? "OpenSL ES"
-                                                                            : "Unknown";
+    const char *apiName;
+    switch (audio_stream->getAudioApi()) {
+        case oboe::AudioApi::AAudio:
+            apiName = "AAudio";
+            break;
+        case oboe::AudioApi::OpenSLES:
+            apiName = "OpenSL ES";
+            break;
+        default:
+            apiName = "Unknown";
+            break;
+    }
     LOG_INFO("Audio API: %s", apiName);
 
     // Return the actual sample rate Oboe opened with
@@ -254,7 +305,6 @@ static void oboe_close() {
     }
 
     unlock();
-    // pthread_mutex_destroy(&mutex);
 }
 
 void close_audio() {
@@ -266,7 +316,8 @@ void close_audio() {
     pthread_mutex_destroy(&mutex);
 }
 
-int open_audio(int rate, int latency, int performance_mode, int channel_count, int audio_api, int format_flags) {
+int open_audio(int rate, int latency, int performance_mode, int channel_count, int audio_api,
+               int format_flags) {
     if (pthread_mutex_init(&mutex, nullptr) != 0) {
         LOG_ERROR("Failed to initialize mutex");
         return -1;
@@ -279,15 +330,10 @@ int open_audio(int rate, int latency, int performance_mode, int channel_count, i
     // What we intend to request, so we can detect a mismatch after opening.
     int assumed_channels = (channel_count == 1) ? 1 : 2;
 
-    // Determine bytes per sample from format flags
-    int bytes_per_sample;
-    if (format_flags & (1 << 0)) {        // XMP_FORMAT_8BIT
-        bytes_per_sample = 1;
-    } else if (format_flags & (1 << 3)) { // XMP_FORMAT_32BIT
-        bytes_per_sample = 4;
-    } else {
-        bytes_per_sample = sizeof(int16_t); // default 16-bit
-    }
+    // Determine bytes per sample from xmp format flags
+    int bytes_per_sample = sizeof(int16_t); // default 16-bit
+    if (format_flags & (1 << 0)) bytes_per_sample = 1; // XMP_FORMAT_8BIT
+    else if (format_flags & (1 << 3)) bytes_per_sample = 4; // XMP_FORMAT_32BIT
 
     // Allocate buffer with requested rate first (we'll resize if needed)
     buffer_size = rate * assumed_channels * bytes_per_sample * BUFFER_TIME / 1000;
@@ -299,8 +345,8 @@ int open_audio(int rate, int latency, int performance_mode, int channel_count, i
     }
 
     // Open Oboe - it will return the actual sample rate
-    int actual_rate = oboe_open(rate, buffer_num, buffer, buffer_size, performance_mode,
-                                channel_count, audio_api);
+    int actual_rate = oboe_open(rate, buffer_num, buffer, buffer_size,
+                                performance_mode, channel_count, audio_api, format_flags);
     if (actual_rate < 0) {
         free(buffer);
         buffer = nullptr;
@@ -329,8 +375,8 @@ int open_audio(int rate, int latency, int performance_mode, int channel_count, i
         }
 
         // Reopen with correct buffer size
-        int reopen_rate = oboe_open(actual_rate, buffer_num, buffer, buffer_size, performance_mode,
-                                    channel_count, audio_api);
+        int reopen_rate = oboe_open(actual_rate, buffer_num, buffer, buffer_size,
+                                    performance_mode, channel_count, audio_api, format_flags);
         if (reopen_rate < 0) {
             free(buffer);
             buffer = nullptr;
@@ -356,7 +402,7 @@ void flush_audio() {
     lock();
 
     if (audio_stream) {
-        // Wait for buffers to drain
+        // Poll every 10ms until all buffers are consumed
         struct timespec sleepTime = {.tv_sec = 0, .tv_nsec = 10000 * 1000};
 
         while (last_free != first_free) {
@@ -405,7 +451,7 @@ int fill_buffer(int looped) {
     int ret;
 
     int ff = atomic_load_int(&first_free);
-    int lf = atomic_load_int(&last_free);
+    // int lf = atomic_load_int(&last_free);
 
     // Fill and enqueue buffer at first_free position
     char *b = &buffer[ff * buffer_size];
@@ -499,30 +545,54 @@ int get_audio_stats(struct AudioStats *stats) {
     stats->buffer_capacity = audio_stream->getBufferCapacityInFrames();
     stats->buffer_size = audio_stream->getBufferSizeInFrames();
     stats->underrun_count = underrun_count.load(std::memory_order_relaxed);
+    auto xRunResult = audio_stream->getXRunCount();
+    stats->xrun_count = (audio_stream->isXRunCountSupported() && xRunResult)
+                        ? xRunResult.value() : 0;
 
-    // XRun count
-    if (audio_stream->isXRunCountSupported()) {
-        oboe::ResultWithValue<int32_t> xRunResult = audio_stream->getXRunCount();
-        stats->xrun_count = xRunResult ? xRunResult.value() : 0;
-    } else {
-        stats->xrun_count = 0;
+    switch (audio_stream->getAudioApi()) {
+        case oboe::AudioApi::AAudio:
+            stats->audio_api = "AAudio";
+            break;
+        case oboe::AudioApi::OpenSLES:
+            stats->audio_api = "OpenSL ES";
+            break;
+        default:
+            stats->audio_api = "Unknown";
+            break;
     }
 
-    // Audio API
-    oboe::AudioApi audioApi = audio_stream->getAudioApi();
-    stats->audio_api = (audioApi == oboe::AudioApi::AAudio) ? "AAudio" : (audioApi ==
-                                                                          oboe::AudioApi::OpenSLES)
-                                                                         ? "OpenSL ES" : "Unknown";
+    switch (audio_stream->getSharingMode()) {
+        case oboe::SharingMode::Exclusive:
+            stats->sharing_mode = "Exclusive";
+            break;
+        default:
+            stats->sharing_mode = "Shared";
+            break;
+    }
 
-    // Sharing mode
-    stats->sharing_mode = (audio_stream->getSharingMode() == oboe::SharingMode::Exclusive)
-                          ? "Exclusive" : "Shared";
+    switch (audio_stream->getPerformanceMode()) {
+        case oboe::PerformanceMode::None:
+            stats->perf_mode = "None";
+            break;
+        case oboe::PerformanceMode::PowerSaving:
+            stats->perf_mode = "PowerSaving";
+            break;
+        default:
+            stats->perf_mode = "LowLatency";
+            break;
+    }
 
-    stats->perf_mode = (audio_stream->getPerformanceMode() == oboe::PerformanceMode::None) ? "None"
-                                                                                           : (audio_stream->getPerformanceMode() ==
-                                                                                              oboe::PerformanceMode::PowerSaving)
-                                                                                             ? "PowerSaving"
-                                                                                             : "LowLatency";
+    switch (audio_stream->getFormat()) {
+        case oboe::AudioFormat::I16:
+            stats->audio_format = "I16";
+            break;
+        case oboe::AudioFormat::I32:
+            stats->audio_format = "I32";
+            break;
+        default:
+            stats->audio_format = "Unknown";
+            break;
+    }
 
     return 0;
 }
