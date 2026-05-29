@@ -433,6 +433,10 @@ class PlayerEngine(
                             continue
                         }
                     }
+                    // Crappy haaaaack! (Drain remaining buffers)
+                    while (Xmp.hasFreeBuffer() && !stopRequest) {
+                        if (Xmp.fillBuffer(false) < 0) break
+                    }
                     endedNaturally = true
                     isPlaying.value = false
                     Timber.i("renderLoop: ended naturally, exiting loop")
