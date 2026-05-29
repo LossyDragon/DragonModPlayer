@@ -126,11 +126,12 @@ class PlayerViewModel(
     /** Returns a formatted string of current Oboe audio stream statistics. */
     fun getAudioStats(): String = Xmp.getAudioStats().let { stats ->
         """
+        Audio API: ${stats.audioApi}
         Audio Glitches: ${stats.xrunCount} (system), ${stats.underrunCount} (app)
-        Sample Rate: ${stats.sampleRate} Hz
         Buffer: ${stats.bufferSize} / ${stats.bufferCapacity} frames
         Frames Per Burst: ${stats.framesPerBurst}
-        Audio API: ${stats.audioApi}
+        Performance Mode: ${stats.perfMode}
+        Sample Rate: ${stats.sampleRate} Hz
         Sharing Mode: ${stats.sharingMode}
         """.trimIndent()
     }

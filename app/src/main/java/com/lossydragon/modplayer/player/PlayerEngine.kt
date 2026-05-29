@@ -16,8 +16,10 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.runBlocking
 import org.helllabs.libxmp.Xmp
 import org.helllabs.libxmp.model.ChannelInfo
 import org.helllabs.libxmp.model.FrameInfo
@@ -27,7 +29,7 @@ import timber.log.Timber
 
 class PlayerEngine(
     private val context: Context,
-    prefs: AppPreferences
+    private val prefs: AppPreferences
 ) {
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private var renderThread: Thread? = null
@@ -80,66 +82,24 @@ class PlayerEngine(
     var stopRequest = false
         private set
 
-    // Xmp Defaults
-    @Volatile
-    private var sampleRate: Int = Xmp.DEFAULT_SAMPLE_RATE
-
-    @Volatile
-    private var format: Int = 0
-
-    @Volatile
-    private var bufferMs: Int = Xmp.DEFAULT_BUFFER_MS
-
-    @Volatile
-    private var defaultPan: Int = Xmp.DEFAULT_PAN_SEPARATION
-
-    @Volatile
-    private var volumeBoost: Int = Xmp.DEFAULT_VOLUME_BOOST
-
-    @Volatile
-    private var stereoMix: Int = Xmp.DEFAULT_STEREO_MIX
-
-    @Volatile
-    private var dspEffect: Int = Xmp.XMP_DSP_LOWPASS
-
-    @Volatile
-    private var playerVolume = Xmp.DEFAULT_PLAYER_VOLUME
-
-    @Volatile
-    private var interpolationType = Xmp.DEFAULT_INTERPOLATION
-
-    @Volatile
-    private var playerFlags: Int = 0
-
     init {
-        prefs.getSampleRateFlow().distinctUntilChanged().onEach { sampleRate = it }.launchIn(scope)
-        prefs.getPlayerFormatFlow().distinctUntilChanged().onEach { format = it }.launchIn(scope)
-        prefs.getBufferMsFlow().distinctUntilChanged().onEach { bufferMs = it }.launchIn(scope)
-        prefs.getDefaultPanFlow().distinctUntilChanged().onEach { defaultPan = it }.launchIn(scope)
         prefs.getVolumeBoostFlow().distinctUntilChanged().onEach {
-            volumeBoost = it
             if (initialized) Xmp.setPlayer(Xmp.XMP_PLAYER_AMP, it)
         }.launchIn(scope)
         prefs.getStereoMixFlow().distinctUntilChanged().onEach {
-            stereoMix = it
             if (initialized) Xmp.setPlayer(Xmp.XMP_PLAYER_MIX, it)
         }.launchIn(scope)
         prefs.getDspEffectFlow().distinctUntilChanged().onEach {
-            dspEffect = it
             if (initialized) Xmp.setPlayer(Xmp.XMP_PLAYER_DSP, it)
         }.launchIn(scope)
         prefs.getPlayerVolumeFlow().distinctUntilChanged().onEach {
-            playerVolume = it
             if (initialized) Xmp.setPlayer(Xmp.XMP_PLAYER_VOLUME, it)
         }.launchIn(scope)
         prefs.getInterpolationTypeFlow().distinctUntilChanged().onEach {
-            interpolationType = it
             if (initialized) Xmp.setPlayer(Xmp.XMP_PLAYER_INTERP, it)
         }.launchIn(scope)
         prefs.getPlayerFlagsFlow().distinctUntilChanged().onEach {
-            playerFlags = it
             if (initialized) {
-                // A500 can update live via CFLAGS
                 val cflags = Xmp.getPlayer(Xmp.XMP_PLAYER_CFLAGS)
                 val newCflags = if ((it and Xmp.XMP_FLAGS_A500) != 0) {
                     cflags or Xmp.XMP_FLAGS_A500
@@ -180,13 +140,31 @@ class PlayerEngine(
             softStop()
             Xmp.releaseModule()
         } else {
-            if (!Xmp.init(sampleRate, bufferMs)) {
+            val sampleRate = runBlocking { prefs.getSampleRateFlow().first() }
+            val bufferMs = runBlocking { prefs.getBufferMsFlow().first() }
+            val format = runBlocking { prefs.getPlayerFormatFlow().first() }
+            val perfMode = runBlocking { prefs.getOboePerfModeFlow().first() }
+            val audioApi = runBlocking { prefs.getOboeAudioApiFlow().first() }
+            val isMono = format and Xmp.XMP_FORMAT_MONO != 0
+
+            val result = Xmp.init(
+                rate = sampleRate,
+                ms = bufferMs,
+                perfMode = perfMode,
+                channels = if (isMono) Xmp.OBOE_CHANNELS_MONO else Xmp.OBOE_CHANNELS_STEREO,
+                audioApi = audioApi,
+                flags = format,
+            )
+
+            if (!result) {
                 Timber.e("Xmp.init() failed")
                 return false
             }
             initialized = true
         }
 
+        val playerFlags = runBlocking { prefs.getPlayerFlagsFlow().first() }
+        val defaultPan = runBlocking { prefs.getDefaultPanFlow().first() }
         val preLoadMask = Xmp.XMP_FLAGS_VBLANK or Xmp.XMP_FLAGS_FX9BUG or Xmp.XMP_FLAGS_FIXLOOP
         Xmp.setPlayer(Xmp.XMP_PLAYER_FLAGS, playerFlags and preLoadMask)
         Xmp.setPlayer(Xmp.XMP_PLAYER_DEFPAN, defaultPan)
@@ -228,6 +206,8 @@ class PlayerEngine(
         Xmp.releaseModule()
 
         val preLoadMask = Xmp.XMP_FLAGS_VBLANK or Xmp.XMP_FLAGS_FX9BUG or Xmp.XMP_FLAGS_FIXLOOP
+        val playerFlags = runBlocking { prefs.getPlayerFlagsFlow().first() }
+        val defaultPan = runBlocking { prefs.getDefaultPanFlow().first() }
         Xmp.setPlayer(Xmp.XMP_PLAYER_FLAGS, playerFlags and preLoadMask)
         Xmp.setPlayer(Xmp.XMP_PLAYER_DEFPAN, defaultPan)
 
@@ -255,6 +235,8 @@ class PlayerEngine(
         stopRequest = false
         paused = false
 
+        val sampleRate = runBlocking { prefs.getSampleRateFlow().first() }
+        val format = runBlocking { prefs.getPlayerFormatFlow().first() }
         if (Xmp.startPlayer(sampleRate, format) != 0) {
             Timber.e("Xmp.startPlayer() failed")
             return
@@ -265,12 +247,19 @@ class PlayerEngine(
             Xmp.mute(i, 0)
         }
 
+        val playerFlags = runBlocking { prefs.getPlayerFlagsFlow().first() }
         val cflags = Xmp.getPlayer(Xmp.XMP_PLAYER_CFLAGS)
         val newCflags = if ((playerFlags and Xmp.XMP_FLAGS_A500) != 0) {
             cflags or Xmp.XMP_FLAGS_A500
         } else {
             cflags and Xmp.XMP_FLAGS_A500.inv()
         }
+
+        val volumeBoost = runBlocking { prefs.getVolumeBoostFlow().first() }
+        val stereoMix = runBlocking { prefs.getStereoMixFlow().first() }
+        val dspEffect = runBlocking { prefs.getDspEffectFlow().first() }
+        val playerVolume = runBlocking { prefs.getPlayerVolumeFlow().first() }
+        val interpolationType = runBlocking { prefs.getInterpolationTypeFlow().first() }
 
         Xmp.setPlayer(Xmp.XMP_PLAYER_AMP, volumeBoost)
         Xmp.setPlayer(Xmp.XMP_PLAYER_CFLAGS, newCflags)

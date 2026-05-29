@@ -25,6 +25,7 @@ import androidx.compose.runtime.Immutable
  *                    "OpenSL ES" (legacy, broader compatibility).
  * @property sharingMode Stream sharing mode: "Exclusive" (dedicated audio path, lowest latency)
  *                       or "Shared" (mixed with other apps, more compatible).
+ * @property perfMode Oboe's performance mode in use e.g. "LowLatency", "None", "PowerSaving".
  */
 @Immutable
 data class AudioStats(
@@ -35,5 +36,6 @@ data class AudioStats(
     val bufferSize: Int = 0,
     val sampleRate: Int = 0,
     val audioApi: String = "",
-    val sharingMode: String = ""
+    val sharingMode: String = "",
+    val perfMode: String = "",
 )

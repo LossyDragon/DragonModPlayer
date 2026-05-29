@@ -7,11 +7,76 @@ import androidx.compose.ui.platform.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alorma.compose.settings.ui.expressive.SettingsMenuLink
 import com.lossydragon.modplayer.db.AppPreferences
+import com.lossydragon.modplayer.ui.screens.preferences.components.PreferenceItem
 import com.lossydragon.modplayer.ui.screens.preferences.components.PreferenceSection
+import com.lossydragon.modplayer.ui.screens.preferences.components.SingleChoiceAlertDialog
 import com.lossydragon.modplayer.ui.theme.AppTheme
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.launch
 import org.helllabs.libxmp.Xmp
 import org.koin.compose.koinInject
+
+private fun Int.toPerfModeKey() = when (this) {
+    Xmp.OBOE_PERFMODE_NONE -> "none"
+    Xmp.OBOE_PERFMODE_POWERSAVING -> "powersaving"
+    else -> "lowlatency"
+}
+
+private fun String.toPerfModeInt() = when (this) {
+    "none" -> Xmp.OBOE_PERFMODE_NONE
+    "powersaving" -> Xmp.OBOE_PERFMODE_POWERSAVING
+    else -> Xmp.OBOE_PERFMODE_LOWLATENCY
+}
+
+private fun Int.toAudioApiKey() = when (this) {
+    Xmp.OBOE_AUDIO_API_AAUDIO -> "aaudio"
+    Xmp.OBOE_AUDIO_API_OPENSLES -> "opensles"
+    else -> "unspecified"
+}
+
+private fun String.toAudioApiInt() = when (this) {
+    "aaudio" -> Xmp.OBOE_AUDIO_API_AAUDIO
+    "opensles" -> Xmp.OBOE_AUDIO_API_OPENSLES
+    else -> Xmp.OBOE_AUDIO_API_UNSPECIFIED
+}
+
+private val perfModeOptions = persistentListOf(
+    PreferenceItem(
+        key = "lowlatency",
+        title = "Low Latency (Default)",
+        description = "Minimizes audio latency. Best for real-time playback but uses more battery."
+    ),
+    PreferenceItem(
+        key = "none",
+        title = "None",
+        description = "No particular performance target. Balanced between latency and battery."
+    ),
+    PreferenceItem(
+        key = "powersaving",
+        title = "Power Saving",
+        description = "Prioritizes battery life over latency. May introduce audio buffering."
+    ),
+)
+
+private val apiOptions = persistentListOf(
+    PreferenceItem(
+        key = "unspecified",
+        title = "Unspecified (Default)",
+        description = "Lets Oboe choose the best available API. Recommended for most devices."
+    ),
+    PreferenceItem(
+        key = "aaudio",
+        title = "AAudio",
+        description = "Modern low-latency Android audio API. Available on Android 8.0+ (API 26+)."
+    ),
+    PreferenceItem(
+        key = "opensles",
+        title = "OpenSL ES",
+        description = "Legacy audio API. Deprecated in Android 13 but may help on older or problematic devices."
+    ),
+)
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -25,46 +90,68 @@ fun PreferenceOboe(
         koinInject<AppPreferences>()
     }
 
-    val perfMode = prefs.getOboePerfModeFlow()
+    val perfMode by prefs.getOboePerfModeFlow()
         .collectAsStateWithLifecycle(initialValue = Xmp.OBOE_PERFMODE_LOWLATENCY)
-    val channels = prefs.getOboeChannelsFlow()
-        .collectAsStateWithLifecycle(initialValue = Xmp.OBOE_CHANNELS_STEREO)
-    val audioApi = prefs.getOboeAudioApiFlow()
-        .collectAsStateWithLifecycle(
-            initialValue = Xmp.OBOE_AUDIO_API_UNSPECIFIED
-        )
+    val audioApi by prefs.getOboeAudioApiFlow()
+        .collectAsStateWithLifecycle(initialValue = Xmp.OBOE_AUDIO_API_UNSPECIFIED)
 
     var isPerfModeShowing by remember { mutableStateOf(false) }
     if (isPerfModeShowing) {
-    }
-
-    var isChannelsShowing by remember { mutableStateOf(false) }
-    if (isChannelsShowing) {
+        SingleChoiceAlertDialog(
+            selectedItemKey = perfMode.toPerfModeKey(),
+            items = perfModeOptions,
+            onItemSelected = { key ->
+                isPerfModeShowing = false
+                key?.let { scope.launch { prefs.setOboePerfMode(it.toPerfModeInt()) } }
+            },
+        )
     }
 
     var isAudioApiShowing by remember { mutableStateOf(false) }
     if (isAudioApiShowing) {
+        SingleChoiceAlertDialog(
+            selectedItemKey = audioApi.toAudioApiKey(),
+            items = apiOptions,
+            onItemSelected = { key ->
+                isAudioApiShowing = false
+                key?.let { scope.launch { prefs.setOboeAudioApi(it.toAudioApiInt()) } }
+            },
+        )
     }
 
     PreferenceSection(
         title = {
             Text(
                 text = "Oboe (Audio)",
-                style = MaterialTheme.typography.headlineSmall
+                style = MaterialTheme.typography.headlineSmall,
             )
         },
         verticalArrangement = Arrangement.spacedBy(4.dp),
         content = {
-            // SettingsSwitch(
-            //     title = { Text("Auto-resume on startup") },
-            //     subtitle = {
-            //         Text("Restore the last queue and continue playback when the app opens.")
-            //     },
-            //     state = autoResume,
-            //     onCheckedChange = { scope.launch { prefs.setAutoResume(it) } },
-            //     colors = colors,
-            //     shapes = ListItemDefaults.segmentedShapes(0, 11),
-            // )
+            SettingsMenuLink(
+                onClick = { isPerfModeShowing = true },
+                title = { Text(text = "Performance Mode") },
+                subtitle = { Text(text = "Controls the audio latency and battery trade-off.") },
+                action = {
+                    Text(
+                        text = perfModeOptions.find { it.key == perfMode.toPerfModeKey() }!!.title
+                    )
+                },
+                colors = colors,
+                shapes = ListItemDefaults.segmentedShapes(0, 3),
+            )
+            SettingsMenuLink(
+                onClick = { isAudioApiShowing = true },
+                title = { Text(text = "Audio API") },
+                subtitle = { Text(text = "Underlying audio system used for playback.") },
+                action = {
+                    Text(
+                        text = apiOptions.find { it.key == audioApi.toAudioApiKey() }!!.title
+                    )
+                },
+                colors = colors,
+                shapes = ListItemDefaults.segmentedShapes(2, 3),
+            )
         }
     )
 }

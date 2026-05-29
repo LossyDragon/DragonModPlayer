@@ -124,7 +124,8 @@ object Xmp {
         ms: Int,
         perfMode: Int = OBOE_PERFMODE_LOWLATENCY,
         channels: Int = OBOE_CHANNELS_STEREO,
-        audioApi: Int = OBOE_AUDIO_API_UNSPECIFIED
+        audioApi: Int = OBOE_AUDIO_API_UNSPECIFIED,
+        flags: Int = 0,
     ): Boolean
 
     external fun mute(chn: Int, status: Int): Int

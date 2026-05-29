@@ -112,10 +112,6 @@ class AppPreferences(context: Context) {
     fun getOboePerfModeFlow() = flow(oboePerfMode, Xmp.OBOE_PERFMODE_LOWLATENCY)
     suspend fun setOboePerfMode(v: Int) = set(oboePerfMode, v)
 
-    private val oboeChannelsCount = intPreferencesKey("oboe_channels_count")
-    fun getOboeChannelsFlow() = flow(oboeChannelsCount, Xmp.OBOE_CHANNELS_STEREO)
-    suspend fun setOboeChannels(v: Int) = set(oboeChannelsCount, v)
-
     private val oboeAudioApi = intPreferencesKey("oboe_audio_api")
     fun getOboeAudioApiFlow() = flow(oboeAudioApi, Xmp.OBOE_AUDIO_API_UNSPECIFIED)
     suspend fun setOboeAudioApi(v: Int) = set(oboeAudioApi, v)

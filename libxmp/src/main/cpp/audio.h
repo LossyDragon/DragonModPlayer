@@ -16,6 +16,7 @@ struct AudioStats {
   int sample_rate;
   const char* audio_api;
   const char* sharing_mode;
+  const char* perf_mode;
 };
 
 void drop_audio(void);
@@ -26,7 +27,7 @@ int get_volume(void);
 
 int has_free_buffer(void);
 
-int open_audio(int, int, int, int, int);
+int open_audio(int, int, int, int, int, int);
 
 int play_audio(void);
 
