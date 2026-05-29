@@ -7,9 +7,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.alorma.compose.settings.ui.expressive.SettingsGroup
+import com.lossydragon.modplayer.R
 import com.lossydragon.modplayer.ui.theme.AppTheme
 
 @Composable
@@ -38,12 +40,12 @@ private fun Preview() {
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 PreferenceSection(
-                    title = { Text("Beans") },
+                    title = { Text(text = stringResource(R.string.confirm)) },
                     enabled = true,
                     content = {}
                 )
                 PreferenceSection(
-                    title = { Text("Beans") },
+                    title = { Text(text = stringResource(R.string.confirm)) },
                     enabled = false,
                     content = {}
                 )

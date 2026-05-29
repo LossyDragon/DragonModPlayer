@@ -4,10 +4,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alorma.compose.settings.ui.expressive.SettingsMenuLink
+import com.lossydragon.modplayer.R
 import com.lossydragon.modplayer.db.AppPreferences
 import com.lossydragon.modplayer.ui.screens.preferences.components.PreferenceItem
 import com.lossydragon.modplayer.ui.screens.preferences.components.PreferenceSection
@@ -42,6 +44,7 @@ private fun String.toAudioApiInt() = when (this) {
     else -> Xmp.OBOE_AUDIO_API_UNSPECIFIED
 }
 
+// TODO localize
 private val perfModeOptions = persistentListOf(
     PreferenceItem(
         key = "lowlatency",
@@ -60,6 +63,7 @@ private val perfModeOptions = persistentListOf(
     ),
 )
 
+// TODO localize
 private val apiOptions = persistentListOf(
     PreferenceItem(
         key = "unspecified",
@@ -122,7 +126,7 @@ fun PreferenceOboe(
     PreferenceSection(
         title = {
             Text(
-                text = "Oboe (Audio)",
+                text = stringResource(R.string.pref_title_oboe),
                 style = MaterialTheme.typography.headlineSmall,
             )
         },
@@ -130,8 +134,8 @@ fun PreferenceOboe(
         content = {
             SettingsMenuLink(
                 onClick = { isPerfModeShowing = true },
-                title = { Text(text = "Performance Mode") },
-                subtitle = { Text(text = "Controls the audio latency and battery trade-off.") },
+                title = { Text(text = stringResource(R.string.pref_performance_mode)) },
+                subtitle = { Text(text = stringResource(R.string.pref_performance_mode_desc)) },
                 action = {
                     Text(
                         text = perfModeOptions.find { it.key == perfMode.toPerfModeKey() }!!.title
@@ -142,12 +146,10 @@ fun PreferenceOboe(
             )
             SettingsMenuLink(
                 onClick = { isAudioApiShowing = true },
-                title = { Text(text = "Audio API") },
-                subtitle = { Text(text = "Underlying audio system used for playback.") },
+                title = { Text(text = stringResource(R.string.pref_audio_api)) },
+                subtitle = { Text(text = stringResource(R.string.pref_audio_api_desc)) },
                 action = {
-                    Text(
-                        text = apiOptions.find { it.key == audioApi.toAudioApiKey() }!!.title
-                    )
+                    Text(text = apiOptions.find { it.key == audioApi.toAudioApiKey() }!!.title)
                 },
                 colors = colors,
                 shapes = ListItemDefaults.segmentedShapes(2, 3),

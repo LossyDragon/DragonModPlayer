@@ -7,6 +7,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.retain.*
 import androidx.compose.ui.*
 import androidx.compose.ui.platform.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.*
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
@@ -52,7 +53,7 @@ fun MainNavigation(
                 bottomBarItems.forEach { destination ->
                     ShortNavigationBarItem(
                         selected = currentTab == destination,
-                        label = { Text(destination.title) },
+                        label = { Text(text = stringResource(destination.title)) },
                         icon = {
                             Icon(
                                 imageVector = if (currentTab == destination) {
@@ -60,7 +61,7 @@ fun MainNavigation(
                                 } else {
                                     destination.unselectedIcon
                                 },
-                                contentDescription = destination.title,
+                                contentDescription = stringResource(destination.title),
                             )
                         },
                         onClick = {

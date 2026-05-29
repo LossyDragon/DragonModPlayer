@@ -4,11 +4,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
 import com.alorma.compose.settings.ui.core.LocalSettingsGroupEnabled
 import com.alorma.compose.settings.ui.expressive.SettingsTileDefaults
+import com.lossydragon.modplayer.R
 import com.lossydragon.modplayer.ui.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -74,16 +76,16 @@ private fun Preview() {
                 SettingsSlider(
                     value = 0.5f,
                     onValueChange = {},
-                    title = { Text("Beans") },
-                    subtitle = { Text("Beans") },
+                    title = { Text(text = stringResource(R.string.confirm)) },
+                    subtitle = { Text(text = stringResource(R.string.confirm)) },
                     enabled = true,
                 )
 
                 SettingsSlider(
                     value = 0.5f,
                     onValueChange = {},
-                    title = { Text("Beans") },
-                    subtitle = { Text("Beans") },
+                    title = { Text(text = stringResource(R.string.confirm)) },
+                    subtitle = { Text(text = stringResource(R.string.confirm)) },
                     enabled = false,
                 )
             }

@@ -9,10 +9,12 @@ import androidx.compose.material3.*
 import androidx.compose.material3.SheetValue.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import androidx.core.net.toUri
+import com.lossydragon.modplayer.R
 import com.lossydragon.modplayer.model.ModuleFile
 import com.lossydragon.modplayer.ui.theme.AppTheme
 import kotlinx.collections.immutable.ImmutableList
@@ -46,7 +48,7 @@ internal fun QueueSheet(
                 contentAlignment = Alignment.Center,
                 content = {
                     Text(
-                        text = "Queue (${queue.size})",
+                        text = stringResource(R.string.title_queue_sheet),
                         style = MaterialTheme.typography.titleMedium,
                     )
                     IconButton(

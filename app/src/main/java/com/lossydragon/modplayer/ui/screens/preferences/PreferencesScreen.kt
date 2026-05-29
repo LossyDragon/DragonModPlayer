@@ -9,9 +9,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.dp
+import com.lossydragon.modplayer.R
 import com.lossydragon.modplayer.db.AppPreferences
 import com.lossydragon.modplayer.ui.components.BackButton
 import com.lossydragon.modplayer.ui.screens.preferences.section.PreferenceBrowser
@@ -34,6 +36,7 @@ internal fun PreferencesScreen(
     onAbout: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
+    val resource = LocalResources.current
     val prefs = if (LocalView.current.isInEditMode) {
         AppPreferences(LocalContext.current)
     } else {
@@ -50,29 +53,25 @@ internal fun PreferencesScreen(
                     contentDescription = null
                 )
             },
-            title = { Text(text = "Reset Settings") },
-            text = {
-                Text(
-                    text = "Are you sure you want to reset all settings to their original value?" +
-                        "\nThis action cannot be undone."
-                )
-            },
+            title = { Text(text = stringResource(R.string.dialog_title_pref_reset)) },
+            text = { Text(text = stringResource(R.string.dialog_message_pref_reset)) },
             confirmButton = {
                 TextButton(
                     onClick = {
                         scope.launch {
+                            val text = resource.getString(R.string.snack_pref_reset_ok)
                             prefs.resetAll()
-                            snackbarHostState.showSnackbar("Reset all settings to default values.")
+                            snackbarHostState.showSnackbar(text)
                         }
                         isShowingResetDialog = false
                     },
-                    content = { Text(text = "Confirm") }
+                    content = { Text(text = stringResource(R.string.confirm)) }
                 )
             },
             dismissButton = {
                 TextButton(
                     onClick = { isShowingResetDialog = false },
-                    content = { Text(text = "Cancel") }
+                    content = { Text(text = stringResource(R.string.cancel)) }
                 )
             }
         )
@@ -83,7 +82,7 @@ internal fun PreferencesScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(text = "Settings") },
+                title = { Text(text = stringResource(R.string.title_preferences)) },
                 navigationIcon = { BackButton(onBack = onBack) },
                 actions = {
                     IconButton(
@@ -91,7 +90,7 @@ internal fun PreferencesScreen(
                         content = {
                             Icon(
                                 imageVector = Icons.Default.RestartAlt,
-                                contentDescription = null
+                                contentDescription = stringResource(R.string.desc_preferences_reset)
                             )
                         }
                     )
@@ -119,10 +118,12 @@ internal fun PreferencesScreen(
                         onAbout = onAbout
                     )
                     Text(
-                        modifier = Modifier.padding(vertical = 6.dp).fillMaxWidth(),
+                        modifier = Modifier
+                            .padding(vertical = 6.dp)
+                            .fillMaxWidth(),
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.surfaceTint,
-                        text = "Advanced Configuration Below"
+                        text = stringResource(R.string.pref_advanced_options)
                     )
                     PreferenceXmp(colors)
                     PreferenceOboe(colors)

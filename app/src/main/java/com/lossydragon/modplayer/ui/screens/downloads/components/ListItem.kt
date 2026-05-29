@@ -82,7 +82,10 @@ internal fun ModuleListItem(module: Module, onClick: () -> Unit) {
             )
         },
         trailingContent = {
-            Text(text = "${module.sizeKb} KB", style = MaterialTheme.typography.labelSmall)
+            Text(
+                text = stringResource(R.string.size_kb, module.sizeKb),
+                style = MaterialTheme.typography.labelSmall
+            )
         },
     )
 }

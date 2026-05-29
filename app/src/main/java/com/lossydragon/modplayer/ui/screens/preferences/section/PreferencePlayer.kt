@@ -4,10 +4,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alorma.compose.settings.ui.expressive.SettingsSwitch
+import com.lossydragon.modplayer.R
 import com.lossydragon.modplayer.db.AppPreferences
 import com.lossydragon.modplayer.ui.screens.preferences.components.PreferenceSection
 import com.lossydragon.modplayer.ui.theme.AppTheme
@@ -34,25 +36,23 @@ fun PreferencePlayer(
     PreferenceSection(
         title = {
             Text(
-                text = "Player",
+                text = stringResource(R.string.pref_title_player),
                 style = MaterialTheme.typography.headlineSmall
             )
         },
         verticalArrangement = Arrangement.spacedBy(4.dp),
         content = {
             SettingsSwitch(
-                title = { Text("Auto-resume on startup") },
-                subtitle = {
-                    Text("Restore the last queue and continue playback when the app opens.")
-                },
+                title = { Text(text = stringResource(R.string.pref_auto_resume)) },
+                subtitle = { Text(text = stringResource(R.string.pref_auto_resume_desc)) },
                 state = autoResume,
                 onCheckedChange = { scope.launch { prefs.setAutoResume(it) } },
                 colors = colors,
                 shapes = ListItemDefaults.segmentedShapes(0, 2),
             )
             SettingsSwitch(
-                title = { Text("Show decimal row numbers") },
-                subtitle = { Text("Show decimal row numbers instead of hex.") },
+                title = { Text(text = stringResource(R.string.pref_show_row_numbers)) },
+                subtitle = { Text(text = stringResource(R.string.pref_show_row_numbers_desc)) },
                 state = rowNumbers,
                 onCheckedChange = { scope.launch { prefs.setRowNumbers(it) } },
                 colors = colors,

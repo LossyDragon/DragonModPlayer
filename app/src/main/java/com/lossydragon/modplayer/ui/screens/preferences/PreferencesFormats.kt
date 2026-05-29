@@ -7,6 +7,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.hapticfeedback.*
 import androidx.compose.ui.platform.*
+import androidx.compose.ui.res.stringResource
+import com.lossydragon.modplayer.R
 import com.lossydragon.modplayer.ui.components.BackButton
 import kotlinx.collections.immutable.ImmutableList
 
@@ -26,7 +28,9 @@ internal fun PreferencesFormats(
         modifier = modifier,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(text = "Formats (${formatList.size})") },
+                title = {
+                    Text(text = stringResource(R.string.title_formats, formatList.size))
+                },
                 navigationIcon = { BackButton(onBack = onBack) }
             )
         },

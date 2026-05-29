@@ -36,7 +36,7 @@ internal fun BrowserInputField(
         searchBarState = searchBarState,
         colors = colors,
         onSearch = { scope.launch { searchBarState.animateToCollapsed() } },
-        placeholder = { Text("Search modules…") },
+        placeholder = { Text(text = stringResource(R.string.search_placeholder)) },
         leadingIcon = {
             if (searchBarState.currentValue == SearchBarValue.Expanded) {
                 BackButton {

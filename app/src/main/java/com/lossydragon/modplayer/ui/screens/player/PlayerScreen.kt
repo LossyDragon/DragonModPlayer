@@ -13,6 +13,7 @@ import androidx.compose.material3.SheetValue.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.vector.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.*
 import androidx.compose.ui.text.style.*
 import androidx.compose.ui.tooling.preview.*
@@ -20,6 +21,7 @@ import androidx.compose.ui.unit.*
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
+import com.lossydragon.modplayer.R
 import com.lossydragon.modplayer.model.ModuleFile
 import com.lossydragon.modplayer.model.PlaybackStatus
 import com.lossydragon.modplayer.model.PlayerUiState
@@ -123,11 +125,36 @@ fun PlayerScreen(
             title = "Mod Info",
             content = {
                 Column {
-                    Text(text = "Number of Channels: ${state.numChannels}")
-                    Text(text = "Number of Instruments: ${state.numInstruments}")
-                    Text(text = "Number of Patterns: ${state.numPatterns}")
-                    Text(text = "Number of Samples: ${state.numSamples}")
-                    Text(text = "Number of Sequences ${state.numSequences}")
+                    Text(
+                        text = stringResource(
+                            R.string.player_num_of_channels,
+                            state.numChannels
+                        )
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.player_num_of_instruments,
+                            state.numInstruments
+                        )
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.player_num_of_patterns,
+                            state.numPatterns
+                        )
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.player_num_of_samples,
+                            state.numSamples
+                        )
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.player_num_of_sequences,
+                            state.numSequences
+                        )
+                    )
                 }
             },
         )
@@ -355,7 +382,9 @@ private fun PlayerScreenContent(
         content = { contentPadding ->
             state.frame?.let {
                 PatternView(
-                    modifier = Modifier.fillMaxSize().padding(contentPadding),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(contentPadding),
                     pattern = patternData,
                     currentRow = state.frame.row,
                     showRowNumbers = state.showRowNumbers,
@@ -407,7 +436,7 @@ private fun PlayerAlertDialog(
         confirmButton = {
             TextButton(
                 onClick = onDismissRequest,
-                content = { Text(text = "Close") }
+                content = { Text(text = stringResource(R.string.close)) }
             )
         }
     )

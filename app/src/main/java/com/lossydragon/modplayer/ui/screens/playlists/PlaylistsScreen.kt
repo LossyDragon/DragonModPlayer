@@ -45,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -56,6 +57,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.lossydragon.modplayer.R
 import com.lossydragon.modplayer.db.entity.PlaylistEntity
 import com.lossydragon.modplayer.model.ModuleFile
 import com.lossydragon.modplayer.model.PlaybackStatus
@@ -294,7 +296,7 @@ private fun PlaylistListScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(text = "Playlists") },
+                title = { Text(text = stringResource(R.string.playlists)) },
                 navigationIcon = { BackButton(onBack = onBack) },
             )
         },
@@ -358,10 +360,15 @@ private fun PlaylistListScreen(
                         MessageBox(
                             text = state.error,
                             actions = {
-                                TextButton(onClick = {
-                                    onDismissError()
-                                    onBack()
-                                }, content = { Text(text = "Go Back") })
+                                TextButton(
+                                    onClick = {
+                                        onDismissError()
+                                        onBack()
+                                    },
+                                    content = {
+                                        Text(text = stringResource(R.string.desc_back_button))
+                                    }
+                                )
                             }
                         )
                     } else if (state.playlists.isEmpty()) {

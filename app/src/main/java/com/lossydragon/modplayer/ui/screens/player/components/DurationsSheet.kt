@@ -9,9 +9,11 @@ import androidx.compose.material3.*
 import androidx.compose.material3.SheetValue.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
+import com.lossydragon.modplayer.R.string.title_subsong_sheet
 import com.lossydragon.modplayer.ui.theme.AppTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
@@ -38,7 +40,7 @@ internal fun DurationsSheet(
                 contentAlignment = Alignment.Center,
                 content = {
                     Text(
-                        text = "Sub Songs (${sequenceDurations.size})",
+                        text = stringResource(title_subsong_sheet, sequenceDurations.size),
                         style = MaterialTheme.typography.titleMedium,
                     )
                     IconButton(

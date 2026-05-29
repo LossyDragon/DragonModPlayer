@@ -55,12 +55,12 @@ internal fun EmptyPrompt(padding: PaddingValues, onPick: () -> Unit) {
                             }
                         )
                         Text(
-                            text = "No folder selected",
+                            text = stringResource(R.string.no_folder_selected),
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.padding(top = 16.dp),
                         )
                         Text(
-                            text = "Tap the folder to choose your start location",
+                            text = stringResource(R.string.no_folder_selected_message),
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(top = 8.dp),
                             textAlign = TextAlign.Center,

@@ -7,10 +7,12 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.*
+import com.lossydragon.modplayer.R
 import com.lossydragon.modplayer.ui.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -44,17 +46,17 @@ internal fun PlaylistsFabMenu(
         content = {
             FloatingActionButtonMenuItem(
                 onClick = onImport,
-                text = { Text(text = "Import Playlists") },
+                text = { Text(text = stringResource(R.string.fab_import_playlists)) },
                 icon = { Icon(imageVector = Icons.Default.Download, contentDescription = null) }
             )
             FloatingActionButtonMenuItem(
                 onClick = onExport,
-                text = { Text(text = "Export Playlists") },
+                text = { Text(text = stringResource(R.string.fab_export_playlists)) },
                 icon = { Icon(imageVector = Icons.Default.Upload, contentDescription = null) }
             )
             FloatingActionButtonMenuItem(
                 onClick = onNewPlaylist,
-                text = { Text(text = "New Playlist") },
+                text = { Text(text = stringResource(R.string.fab_new_playlist)) },
                 icon = { Icon(imageVector = Icons.Default.Add, contentDescription = null) }
             )
         },

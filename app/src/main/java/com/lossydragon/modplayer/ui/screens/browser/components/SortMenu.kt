@@ -34,7 +34,7 @@ internal fun SortMenu(
             shape = MaterialTheme.shapes.small,
             content = {
                 DropdownMenuItem(
-                    text = { Text(text = "Name") },
+                    text = { Text(text = stringResource(R.string.name)) },
                     onClick = {
                         onSortOrder(BrowserSortOrder.NAME)
                         showSortMenu = false
@@ -49,7 +49,7 @@ internal fun SortMenu(
                     }
                 )
                 DropdownMenuItem(
-                    text = { Text(text = "Type") },
+                    text = { Text(text = stringResource(R.string.type)) },
                     onClick = {
                         onSortOrder(BrowserSortOrder.TYPE)
                         showSortMenu = false
@@ -64,7 +64,7 @@ internal fun SortMenu(
                     }
                 )
                 DropdownMenuItem(
-                    text = { Text(text = "Size") },
+                    text = { Text(text = stringResource(R.string.size)) },
                     onClick = {
                         onSortOrder(BrowserSortOrder.SIZE)
                         showSortMenu = false

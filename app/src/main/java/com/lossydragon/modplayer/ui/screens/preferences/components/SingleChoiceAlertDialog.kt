@@ -7,6 +7,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.res.stringResource
+import com.lossydragon.modplayer.R
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class PreferenceItem(
@@ -25,7 +27,7 @@ internal fun SingleChoiceAlertDialog(
 
     AlertDialog(
         onDismissRequest = { onItemSelected(selectedItemKey) },
-        title = { Text(text = "Single choice") },
+        title = { Text(text = stringResource(R.string.dialog_title_single_choice)) },
         text = {
             Column {
                 items.forEach { sampleItem ->
@@ -42,14 +44,14 @@ internal fun SingleChoiceAlertDialog(
             {
                 TextButton(
                     onClick = { onItemSelected(null) },
-                    content = { Text(text = "Cancel") }
+                    content = { Text(text = stringResource(R.string.cancel)) }
                 )
             }
         } else {
             {
                 TextButton(
                     onClick = { onItemSelected(userSelectedItem.value) },
-                    content = { Text(text = "Select") }
+                    content = { Text(text = stringResource(R.string.select)) }
                 )
             }
         },
@@ -59,7 +61,7 @@ internal fun SingleChoiceAlertDialog(
             {
                 TextButton(
                     onClick = { onItemSelected(null) },
-                    content = { Text(text = "Clear") }
+                    content = { Text(text = stringResource(R.string.clear)) }
                 )
             }
         },

@@ -19,7 +19,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.lossydragon.modplayer.R
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class FlagItem(
@@ -39,7 +41,7 @@ internal fun MultiChoiceAlertDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Player Flags") },
+        title = { Text(text = stringResource(R.string.dialog_title_multi_choice)) },
         text = {
             Column {
                 items.forEach { item ->
@@ -60,10 +62,12 @@ internal fun MultiChoiceAlertDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(working) }) { Text("Apply") }
+            TextButton(onClick = {
+                onConfirm(working)
+            }) { Text(text = stringResource(R.string.confirm)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(text = stringResource(R.string.cancel)) }
         }
     )
 }

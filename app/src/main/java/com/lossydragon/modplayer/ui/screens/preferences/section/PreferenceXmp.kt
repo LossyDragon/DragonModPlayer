@@ -6,11 +6,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.platform.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alorma.compose.settings.ui.expressive.SettingsMenuLink
 import com.alorma.compose.settings.ui.expressive.SettingsSwitch
+import com.lossydragon.modplayer.R
 import com.lossydragon.modplayer.db.AppPreferences
 import com.lossydragon.modplayer.ui.screens.preferences.components.FlagItem
 import com.lossydragon.modplayer.ui.screens.preferences.components.MultiChoiceAlertDialog
@@ -24,6 +26,7 @@ import kotlinx.coroutines.launch
 import org.helllabs.libxmp.Xmp
 import org.koin.compose.koinInject
 
+// TODO localize
 private fun formatFlagsLabel(flags: Int): String {
     val parts = buildList {
         if (flags and Xmp.XMP_FORMAT_8BIT != 0) {
@@ -55,6 +58,7 @@ fun PreferenceXmp(
         koinInject<AppPreferences>()
     }
 
+    // TODO localize
     val sampleRateOptions = remember {
         persistentListOf(
             PreferenceItem(key = "8000", title = "8000 Hz", description = "Telephone quality"),
@@ -63,6 +67,7 @@ fun PreferenceXmp(
             PreferenceItem(key = "48000", title = "48000 Hz", description = "DVD quality"),
         )
     }
+    // TODO localize
     val flagItems = remember {
         persistentListOf(
             FlagItem(
@@ -88,6 +93,7 @@ fun PreferenceXmp(
         )
     }
 
+    // TODO localize
     val interpOptions = remember {
         persistentListOf(
             PreferenceItem(
@@ -128,8 +134,6 @@ fun PreferenceXmp(
         .collectAsStateWithLifecycle(initialValue = Xmp.DEFAULT_PLAYER_VOLUME)
     val boost by prefs.getVolumeBoostFlow()
         .collectAsStateWithLifecycle(initialValue = Xmp.DEFAULT_VOLUME_BOOST)
-    val autoResume by prefs.getAutoResumeFlow()
-        .collectAsStateWithLifecycle(initialValue = false)
 
     var isSampleRateShowing by remember { mutableStateOf(false) }
     if (isSampleRateShowing) {
@@ -170,6 +174,7 @@ fun PreferenceXmp(
 
     var showFormatDialog by remember { mutableStateOf(false) }
     if (showFormatDialog) {
+        // TODO localize
         MultiChoiceAlertDialog(
             currentFlags = formatFlags,
             items = persistentListOf(
@@ -195,75 +200,63 @@ fun PreferenceXmp(
     PreferenceSection(
         title = {
             Text(
-                text = "Libxmp",
+                text = stringResource(R.string.pref_title_libxmp),
                 style = MaterialTheme.typography.headlineSmall
             )
         },
         verticalArrangement = Arrangement.spacedBy(4.dp),
         content = {
             SettingsMenuLink(
-                title = { Text(text = "Sample Rate") },
-                subtitle = {
-                    Text(
-                        "Audio output rate (Hz). Higher = better quality, more CPU. Applies on next track."
-                    )
-                },
-                action = { Text(text = "$sampleRate Hz") },
+                title = { Text(text = stringResource(R.string.pref_sample_rate)) },
+                subtitle = { Text(text = stringResource(R.string.pref_sample_rate_desc)) },
+                action = { Text(text = stringResource(R.string.size_hz, sampleRate)) },
                 colors = colors,
                 shapes = ListItemDefaults.segmentedShapes(0, 10),
                 onClick = { isSampleRateShowing = true }
             )
             SettingsMenuLink(
-                title = { Text("Output Format") },
-                subtitle = {
-                    Text(
-                        "Sample format and channel layout. Default (16-bit stereo) is recommended. Applies on next track."
-                    )
-                },
+                title = { Text(text = stringResource(R.string.pref_output_format)) },
+                subtitle = { Text(text = stringResource(R.string.pref_output_format_desc)) },
                 action = { Text(formatFlagsLabel(formatFlags)) },
                 colors = colors,
                 shapes = ListItemDefaults.segmentedShapes(1, 10),
                 onClick = { showFormatDialog = true },
             )
             SettingsMenuLink(
-                title = { Text("Interpolation") },
-                subtitle = {
-                    Text(
-                        "Sample interpolation. Nearest=sharp/8-bit feel, Linear=balanced, Spline=smoothest."
-                    )
-                },
+                title = { Text(text = stringResource(R.string.pref_interpolation_type)) },
+                subtitle = { Text(text = stringResource(R.string.pref_interpolation_type_desc)) },
                 action = {
-                    Text(
-                        when (interp) {
-                            Xmp.XMP_INTERP_NEAREST -> "Nearest"
-                            Xmp.XMP_INTERP_LINEAR -> "Linear"
-                            Xmp.XMP_INTERP_SPLINE -> "Spline"
-                            else -> "Unknown"
-                        }
-                    )
+                    val text = when (interp) {
+                        Xmp.XMP_INTERP_NEAREST -> stringResource(R.string.interp_nearest)
+                        Xmp.XMP_INTERP_LINEAR -> stringResource(R.string.interp_linear)
+                        Xmp.XMP_INTERP_SPLINE -> stringResource(R.string.interp_spline)
+                        else -> stringResource(R.string.unknown)
+                    }
+                    Text(text = text)
                 },
                 colors = colors,
                 shapes = ListItemDefaults.segmentedShapes(2, 10),
                 onClick = { isInterpShowing = true }
             )
             SettingsMenuLink(
-                title = { Text("Player Flags") },
-                subtitle = {
-                    Text(
-                        "VBlank timing, FX9 bug, FixLoop, Amiga 500 mixer. All except A500 apply on next track."
-                    )
-                },
+                title = { Text(text = stringResource(R.string.pref_flags)) },
+                subtitle = { Text(text = stringResource(R.string.pref_flags_desc)) },
                 action = {
                     val count = flagItems.count { (flags and it.flag) != 0 }
-                    Text(text = if (count == 0) "None" else "$count enabled")
+                    val text = if (count == 0) {
+                        stringResource(R.string.none)
+                    } else {
+                        stringResource(R.string.pref_flags_enabled)
+                    }
+                    Text(text = text)
                 },
                 colors = colors,
                 shapes = ListItemDefaults.segmentedShapes(3, 10),
                 onClick = { isFlagsShowing = true }
             )
             SettingsSwitch(
-                title = { Text("Lowpass Filter") },
-                subtitle = { Text("Lowpass DSP smoothing high frequencies.") },
+                title = { Text(text = stringResource(R.string.pref_dsp)) },
+                subtitle = { Text(text = stringResource(R.string.pref_dsp_desc)) },
                 state = dspEffect != Xmp.XMP_DSP_NONE,
                 onCheckedChange = { enabled ->
                     scope.launch {
@@ -275,87 +268,58 @@ fun PreferenceXmp(
                 shapes = ListItemDefaults.segmentedShapes(4, 10),
             )
             SettingsSlider(
-                title = { Text(text = "Buffer Milliseconds") },
-                subtitle = {
-                    Text(
-                        text = "Audio buffer size. Smaller = lower latency but risk of glitches. " +
-                            "Applies on next track."
-                    )
-                },
-                action = { Text(text = "$bufferMs ms") },
+                title = { Text(text = stringResource(R.string.pref_buffer_ms)) },
+                subtitle = { Text(text = stringResource(R.string.pref_buffer_ms_desc)) },
+                action = { Text(text = stringResource(R.string.pref_buffer_ms_count, bufferMs)) },
                 colors = colors,
                 steps = ((Xmp.MAX_BUFFER_MS - Xmp.MIN_BUFFER_MS) / 40) - 1, // = 22
                 valueRange = Xmp.MIN_BUFFER_MS.toFloat()..Xmp.MAX_BUFFER_MS.toFloat(),
                 value = bufferMs.toFloat(),
-                onValueChange = { value ->
-                    scope.launch { prefs.setBufferMs(value.toInt()) }
-                },
+                onValueChange = { scope.launch { prefs.setBufferMs(it.toInt()) } },
                 shapes = ListItemDefaults.segmentedShapes(5, 10),
             )
             SettingsSlider(
-                title = { Text("Player Volume") },
-                subtitle = { Text("Master output volume (%).") },
-                action = { Text("$volume%") },
+                title = { Text(text = stringResource(R.string.pref_volume)) },
+                subtitle = { Text(text = stringResource(R.string.pref_volume_desc)) },
+                action = { Text(text = stringResource(R.string.value_percent, volume)) },
                 colors = colors,
                 steps = 0,
                 valueRange = 0f..100f,
                 value = volume.toFloat(),
-                onValueChange = { value ->
-                    scope.launch { prefs.setPlayerVolume(value.toInt()) }
-                },
+                onValueChange = { scope.launch { prefs.setPlayerVolume(it.toInt()) } },
                 shapes = ListItemDefaults.segmentedShapes(6, 10),
             )
             SettingsSlider(
-                title = { Text("Amplification") },
-                subtitle = {
-                    Text(
-                        "Pre-mix gain factor (0=quiet, 1=normal, 2–3=boost). May clip at high values."
-                    )
-                },
-                action = { Text("${boost}x") },
+                title = { Text(text = stringResource(R.string.pref_boost)) },
+                subtitle = { Text(text = stringResource(R.string.pref_boost_desc)) },
+                action = { Text(text = stringResource(R.string.value_x, boost)) },
                 colors = colors,
                 steps = 2,
                 valueRange = 0f..3f,
                 value = boost.toFloat(),
-                onValueChange = { value ->
-                    scope.launch { prefs.setVolumeBoost(value.toInt()) }
-                },
+                onValueChange = { scope.launch { prefs.setVolumeBoost(it.toInt()) } },
                 shapes = ListItemDefaults.segmentedShapes(7, 10),
             )
             SettingsSlider(
-                title = { Text(text = "Stereo Mixing") },
-                subtitle = {
-                    Text(
-                        text = "Stereo separation (%). 0=mono, " +
-                            "100=full stereo, negative=channel swap."
-                    )
-                },
-                action = { Text(text = "$mix%") },
+                title = { Text(text = stringResource(R.string.pref_stereo_mix)) },
+                subtitle = { Text(text = stringResource(R.string.pref_stereo_mix_desc)) },
+                action = { Text(text = stringResource(R.string.value_percent, mix)) },
                 colors = colors,
                 steps = 0,
                 valueRange = -100f..100f,
                 value = mix.toFloat(),
-                onValueChange = { value ->
-                    scope.launch { prefs.setStereoMix(value.toInt()) }
-                },
+                onValueChange = { scope.launch { prefs.setStereoMix(it.toInt()) } },
                 shapes = ListItemDefaults.segmentedShapes(8, 10),
             )
             SettingsSlider(
-                title = { Text(text = "Pan Separation") },
-                subtitle = {
-                    Text(
-                        text = "Left/right pan width for stereo formats (%). " +
-                            "0=mono, 100=hard pan. Applies on next track."
-                    )
-                },
-                action = { Text(text = "$pan%") },
+                title = { Text(text = stringResource(R.string.pref_pan)) },
+                subtitle = { Text(text = stringResource(R.string.pref_pan_desc),) },
+                action = { Text(text = stringResource(R.string.value_percent, pan)) },
                 colors = colors,
                 steps = 4,
                 valueRange = 0f..100f,
                 value = pan.toFloat(),
-                onValueChange = { value ->
-                    scope.launch { prefs.setDefaultPan(value.toInt()) }
-                },
+                onValueChange = { scope.launch { prefs.setDefaultPan(it.toInt()) } },
                 shapes = ListItemDefaults.segmentedShapes(9, 10),
             )
         }

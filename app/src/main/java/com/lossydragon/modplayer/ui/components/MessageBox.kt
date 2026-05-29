@@ -91,8 +91,8 @@ private fun Preview() {
                 MessageBox(
                     text = LoremIpsum(50).values.first(),
                     actions = {
-                        TextButton(onClick = {}) { Text("Button 1") }
-                        TextButton(onClick = {}) { Text("Button 2") }
+                        TextButton(onClick = {}) { Text(text = stringResource(R.string.confirm)) }
+                        TextButton(onClick = {}) { Text(text = stringResource(R.string.confirm)) }
                     }
                 )
             }

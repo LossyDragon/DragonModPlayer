@@ -21,8 +21,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
+import com.lossydragon.modplayer.R
 import com.lossydragon.modplayer.db.entity.PlaylistEntity
 import com.lossydragon.modplayer.ui.theme.AppTheme
 import com.lossydragon.modplayer.util.toReadableDate
@@ -67,7 +69,7 @@ internal fun PlaylistListItem(
                     onDismissRequest = { expanded = false },
                 ) {
                     DropdownMenuItem(
-                        text = { Text(text = "Delete") },
+                        text = { Text(text = stringResource(R.string.delete)) },
                         onClick = {
                             expanded = false
                             onDelete()
@@ -81,7 +83,7 @@ internal fun PlaylistListItem(
                         },
                     )
                     DropdownMenuItem(
-                        text = { Text(text = "Rename") },
+                        text = { Text(text = stringResource(R.string.rename)) },
                         onClick = {
                             expanded = false
                             onRename()

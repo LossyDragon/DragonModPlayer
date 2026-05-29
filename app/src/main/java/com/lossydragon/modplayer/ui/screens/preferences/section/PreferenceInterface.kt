@@ -8,6 +8,7 @@ import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.platform.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
@@ -18,6 +19,7 @@ import com.github.skydoves.colorpicker.compose.BrightnessSlider
 import com.github.skydoves.colorpicker.compose.HsvColorPicker
 import com.github.skydoves.colorpicker.compose.SaturationSlider
 import com.github.skydoves.colorpicker.compose.rememberColorPickerController
+import com.lossydragon.modplayer.R
 import com.lossydragon.modplayer.db.AppPreferences
 import com.lossydragon.modplayer.ui.screens.preferences.components.PreferenceItem
 import com.lossydragon.modplayer.ui.screens.preferences.components.PreferenceSection
@@ -31,6 +33,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
+// TODO localize
 private val styleItems = persistentListOf(
     PreferenceItem(
         key = PaletteStyle.TonalSpot.name,
@@ -130,7 +133,7 @@ fun PreferenceInterface(
     if (isThemeColorShowing) {
         AlertDialog(
             onDismissRequest = { isThemeColorShowing = false },
-            title = { Text(text = "Theme Color") },
+            title = { Text(text = stringResource(R.string.dialog_title_theme_color)) },
             text = {
                 Column {
                     HsvColorPicker(
@@ -158,7 +161,7 @@ fun PreferenceInterface(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "#$hexCode",
+                            text = stringResource(R.string.hex_code, hexCode),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
 
@@ -192,21 +195,21 @@ fun PreferenceInterface(
                         scope.launch { prefs.setThemeColor(textColor.toArgb()) }
                         isThemeColorShowing = false
                     },
-                    content = { Text(text = "Confirm") }
+                    content = { Text(text = stringResource(R.string.confirm)) }
                 )
             },
             dismissButton = {
                 Row {
                     TextButton(
                         onClick = { isThemeColorShowing = false },
-                        content = { Text(text = "Cancel") }
+                        content = { Text(text = stringResource(R.string.cancel)) }
                     )
                     TextButton(
                         onClick = {
                             scope.launch { prefs.setThemeColor(seed.toArgb()) }
                             isThemeColorShowing = false
                         },
-                        content = { Text(text = "Reset") }
+                        content = { Text(text = stringResource(R.string.reset)) }
                     )
                 }
             }
@@ -216,28 +219,28 @@ fun PreferenceInterface(
     PreferenceSection(
         title = {
             Text(
-                text = "Interface",
+                text = stringResource(R.string.pref_title_interface),
                 style = MaterialTheme.typography.headlineSmall
             )
         },
         verticalArrangement = Arrangement.spacedBy(4.dp),
         content = {
             SettingsMenuLink(
-                title = { Text(text = "Scheme Style") },
+                title = { Text(text = stringResource(R.string.pref_scheme_style)) },
                 subtitle = { Text(text = style.name) },
                 colors = colors,
                 shapes = ListItemDefaults.segmentedShapes(0, 3),
                 onClick = { isThemeStyleShowing = true }
             )
             SettingsMenuLink(
-                title = { Text(text = "Theme Color") },
+                title = { Text(text = stringResource(R.string.pref_theme_color)) },
                 subtitle = { Text(text = color.toHex()) },
                 colors = colors,
                 shapes = ListItemDefaults.segmentedShapes(1, 3),
                 onClick = { isThemeColorShowing = true }
             )
             SettingsSwitch(
-                title = { Text(text = "AMOLED Mode") },
+                title = { Text(text = stringResource(R.string.pref_amoled)) },
                 subtitle = { Text(text = amoled.toString()) },
                 colors = colors,
                 shapes = ListItemDefaults.segmentedShapes(2, 3),

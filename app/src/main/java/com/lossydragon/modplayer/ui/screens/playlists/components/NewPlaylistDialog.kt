@@ -7,8 +7,11 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
+import com.lossydragon.modplayer.R
 import com.lossydragon.modplayer.ui.theme.AppTheme
 
 @Composable
@@ -19,6 +22,7 @@ internal fun NewPlaylistDialog(
     initialName: String = "",
     initialComment: String = ""
 ) {
+    val resource = LocalResources.current
     val isEditing = initialName.isNotBlank()
 
     var name by remember { mutableStateOf(initialName) }
@@ -42,19 +46,29 @@ internal fun NewPlaylistDialog(
                 contentDescription = null,
             )
         },
-        title = { Text(text = if (isEditing) "Edit Playlist" else "New Playlist") },
+        title = {
+            Text(
+                text = stringResource(
+                    if (isEditing) {
+                        R.string.dialog_title_edit_playlist
+                    } else {
+                        R.string.dialog_title_new_playlist
+                    }
+                )
+            )
+        },
         text = {
             Column {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text(text = "Name") },
+                    label = { Text(text = stringResource(R.string.name)) },
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(
                     value = comment,
                     onValueChange = { comment = it },
-                    label = { Text(text = "Comment") },
+                    label = { Text(text = stringResource(R.string.comment)) },
                     maxLines = 6,
                 )
             }
@@ -63,17 +77,31 @@ internal fun NewPlaylistDialog(
             TextButton(
                 onClick = {
                     if (name.isBlank()) {
-                        onError("No name given for playlist.")
+                        val text = resource.getString(R.string.error_playlist_no_name)
+                        onError(text)
                     } else {
                         onCreate(name, comment)
                     }
                     dismiss()
                 },
-                content = { Text(text = if (isEditing) "Save" else "Create") }
+                content = {
+                    Text(
+                        text = stringResource(
+                            if (isEditing) {
+                                R.string.save
+                            } else {
+                                R.string.create
+                            }
+                        )
+                    )
+                }
             )
         },
         dismissButton = {
-            TextButton(onClick = dismiss, content = { Text(text = "Cancel") })
+            TextButton(
+                onClick = dismiss,
+                content = { Text(text = stringResource(R.string.cancel)) }
+            )
         }
     )
 }

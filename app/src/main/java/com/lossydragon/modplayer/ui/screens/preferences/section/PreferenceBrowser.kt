@@ -16,10 +16,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alorma.compose.settings.ui.expressive.SettingsMenuLink
+import com.lossydragon.modplayer.R
 import com.lossydragon.modplayer.db.AppPreferences
 import com.lossydragon.modplayer.ui.screens.preferences.components.PreferenceSection
 import com.lossydragon.modplayer.ui.theme.AppTheme
@@ -59,14 +61,14 @@ fun PreferenceBrowser(colors: ListItemColors) {
     PreferenceSection(
         title = {
             Text(
-                text = "File Browser",
+                text = stringResource(R.string.pref_title_browser),
                 style = MaterialTheme.typography.headlineSmall
             )
         },
         verticalArrangement = Arrangement.spacedBy(4.dp),
         content = {
             SettingsMenuLink(
-                title = { Text(text = "Set start location") },
+                title = { Text(text = stringResource(R.string.pref_start_location)) },
                 subtitle = { Text(text = currentFolder) },
                 shapes = ListItemDefaults.segmentedShapes(0, 0),
                 colors = colors,

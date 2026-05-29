@@ -4,7 +4,9 @@ import androidx.compose.material.icons.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.*
+import com.lossydragon.modplayer.R
 import com.lossydragon.modplayer.db.entity.PlaylistEntity
 import com.lossydragon.modplayer.ui.theme.AppTheme
 
@@ -19,11 +21,9 @@ internal fun DeletePlaylistDialog(
         icon = {
             Icon(imageVector = Icons.Default.DeleteForever, contentDescription = null)
         },
-        title = { Text(text = "Delete Playlist") },
+        title = { Text(text = stringResource(R.string.dialog_title_delete_playlist)) },
         text = {
-            Text(
-                text = "Are you sure you want to delete '${playlist.name}'?\nThis cannot be undone!"
-            )
+            Text(text = stringResource(R.string.dialog_message_delete_playlist, playlist.name))
         },
         confirmButton = {
             TextButton(
@@ -31,11 +31,14 @@ internal fun DeletePlaylistDialog(
                     onConfirm()
                     onDismiss()
                 },
-                content = { Text(text = "Delete") }
+                content = { Text(text = stringResource(R.string.delete)) }
             )
         },
         dismissButton = {
-            TextButton(onClick = onDismiss, content = { Text(text = "Cancel") })
+            TextButton(
+                onClick = onDismiss,
+                content = { Text(text = stringResource(R.string.cancel)) }
+            )
         }
     )
 }
