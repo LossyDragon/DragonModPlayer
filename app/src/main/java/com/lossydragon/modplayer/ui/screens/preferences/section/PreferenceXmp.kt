@@ -1,5 +1,6 @@
 package com.lossydragon.modplayer.ui.screens.preferences.section
 
+import android.content.res.Resources
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -26,21 +27,22 @@ import kotlinx.coroutines.launch
 import org.helllabs.libxmp.Xmp
 import org.koin.compose.koinInject
 
-// TODO localize
-private fun formatFlagsLabel(flags: Int): String {
+private fun formatFlagsLabel(resources: Resources, flags: Int): String {
     val parts = buildList {
         if (flags and Xmp.XMP_FORMAT_8BIT != 0) {
-            add("8-bit")
+            add(resources.getString(R.string.eight_bit))
         } else if (flags and Xmp.XMP_FORMAT_32BIT != 0) {
-            add("32-bit")
+            add(resources.getString(R.string.thirtytwo_bit))
         } else {
-            add("16-bit")
+            add(resources.getString(R.string.sixteen_bit))
         }
-        if (flags and Xmp.XMP_FORMAT_UNSIGNED != 0) add("unsigned")
+        if (flags and Xmp.XMP_FORMAT_UNSIGNED != 0) {
+            add(resources.getString(R.string.unsigned))
+        }
         if (flags and Xmp.XMP_FORMAT_MONO != 0) {
-            add("mono")
+            add(resources.getString(R.string.mono))
         } else {
-            add("stereo")
+            add(resources.getString(R.string.stereo))
         }
     }
     return parts.joinToString(", ")
@@ -138,6 +140,7 @@ private val formatOptions = persistentListOf(
 fun PreferenceXmp(
     colors: ListItemColors
 ) {
+    val resource = LocalResources.current
     val scope = rememberCoroutineScope()
     val prefs = if (LocalView.current.isInEditMode) {
         AppPreferences(LocalContext.current)
@@ -205,7 +208,6 @@ fun PreferenceXmp(
 
     var showFormatDialog by remember { mutableStateOf(false) }
     if (showFormatDialog) {
-        // TODO localize
         MultiChoiceAlertDialog(
             currentFlags = formatFlags,
             items = formatOptions,
@@ -243,7 +245,7 @@ fun PreferenceXmp(
             SettingsMenuLink(
                 title = { Text(text = stringResource(R.string.pref_output_format)) },
                 subtitle = { Text(text = stringResource(R.string.pref_output_format_desc)) },
-                action = { Text(formatFlagsLabel(formatFlags)) },
+                action = { Text(text = formatFlagsLabel(resource, formatFlags)) },
                 colors = colors,
                 shapes = ListItemDefaults.segmentedShapes(1, 10),
                 onClick = { showFormatDialog = true },
@@ -272,7 +274,7 @@ fun PreferenceXmp(
                     val text = if (count == 0) {
                         stringResource(R.string.none)
                     } else {
-                        stringResource(R.string.pref_flags_enabled)
+                        stringResource(R.string.pref_flags_enabled, count)
                     }
                     Text(text = text)
                 },

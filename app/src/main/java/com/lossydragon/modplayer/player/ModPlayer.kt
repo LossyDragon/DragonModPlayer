@@ -21,6 +21,8 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.lossydragon.modplayer.R
 import com.lossydragon.modplayer.db.AppPreferences
 import com.lossydragon.modplayer.model.ModuleFile
+import kotlin.math.abs
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -35,8 +37,6 @@ import kotlinx.serialization.json.Json
 import org.helllabs.libxmp.Xmp
 import org.helllabs.libxmp.model.ModInfo
 import timber.log.Timber
-import kotlin.math.abs
-import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Media3 [androidx.media3.common.SimpleBasePlayer] backed by [PlayerEngine].
@@ -56,6 +56,9 @@ class ModPlayer(
     private val artworkUri: Uri by lazy {
         "android.resource://${context.packageName}/${R.drawable.ic_launcher_foreground}".toUri()
     }
+
+    @Volatile
+    private var isLoading = false
 
     @Volatile
     private var pendingSeekPositionMs: Long = -1L
@@ -211,11 +214,17 @@ class ModPlayer(
         invalidateState()
     }
 
-    private fun loadAndStartAt(index: Int, seekToMs: Long? = null) {
+    private fun loadAndStartAt(index: Int, seekToMs: Long? = null, autoStart: Boolean = true) {
         val file = queue.getOrNull(index) ?: return
 
+        if (isLoading) return
+
         Thread {
+            isLoading = true
+            Timber.d("loadAndStartAt: loading index=$index autoStart=$autoStart file=${file.name}")
             if (engine.loadNext(file)) {
+                Timber.d("loadAndStartAt: loadNext succeeded, autoStart=$autoStart")
+
                 val realItem = MediaItem.Builder()
                     .setUri(file.uri)
                     .setMediaId(file.uri.toString())
@@ -228,17 +237,20 @@ class ModPlayer(
                     invalidateState()
                 }
 
-                engine.start()
-
-                if (seekToMs != null && seekToMs > 0L) {
-                    engine.seek(seekToMs.toInt())
-                    pendingSeekPositionMs = seekToMs
+                if (autoStart) {
+                    Timber.d("loadAndStartAt: calling engine.start()")
+                    engine.start()
+                    if (seekToMs != null && seekToMs > 0L) {
+                        engine.seek(seekToMs.toInt())
+                        pendingSeekPositionMs = seekToMs
+                    }
                 }
 
                 mainHandler.post { invalidateState() }
             } else {
                 mainHandler.post { skipUnplayable() }
             }
+            isLoading = false
         }.start()
     }
 
@@ -422,11 +434,33 @@ class ModPlayer(
     }
 
     override fun handleSetPlayWhenReady(playWhenReady: Boolean): ListenableFuture<*> {
+        Timber.d(
+            "handleSetPlayWhenReady: playWhenReady=$playWhenReady isPlaying=${engine.isPlaying.value} initialized=${engine.initialized} isLoading=$isLoading queue=${queue.size}"
+        )
         if (!playWhenReady) {
             engine.pause()
         } else if (!engine.isPlaying.value) {
             requestAudioFocus()
-            engine.resume()
+            if (!engine.initialized) {
+                if (!isLoading) {
+                    Timber.d(
+                        "handleSetPlayWhenReady: engine not initialized, calling loadAndStartAt($currentIndex)"
+                    )
+                    loadAndStartAt(currentIndex)
+                } else {
+                    Timber.d(
+                        "handleSetPlayWhenReady: engine not initialized but isLoading=true, skipping"
+                    )
+                }
+            } else {
+                if (engine.paused) {
+                    Timber.d("handleSetPlayWhenReady: engine initialized, calling resume()")
+                    engine.resume()
+                } else {
+                    Timber.d("handleSetPlayWhenReady: engine initialized, calling start()")
+                    engine.start()
+                }
+            }
         }
         return Futures.immediateVoidFuture()
     }
@@ -586,14 +620,13 @@ class ModPlayer(
                 prefs.clearQueueState()
                 return@launch
             }
-            // TODO fix
-            // prefs.saveQueueState(
-            //     json = Json.encodeToString(originalQueue.toList()),
-            //     index = currentIndex,
-            //     shuffle = shuffleModeEnabled,
-            //     repeat = repeatMode,
-            //     positionMs = engine.positionMs.value,
-            // )
+            prefs.saveQueueState(
+                json = Json.encodeToString(originalQueue.toList()),
+                index = currentIndex,
+                shuffle = shuffleModeEnabled,
+                repeat = repeatMode,
+                positionMs = engine.positionMs.value,
+            )
         }
     }
 
@@ -616,6 +649,8 @@ class ModPlayer(
 
         if (prefs.getAutoResume()) {
             loadAndStartAt(currentIndex, seekToMs = state.positionMs.takeIf { it > 0L })
+        } else {
+            loadAndStartAt(currentIndex, autoStart = false)
         }
 
         invalidateState()

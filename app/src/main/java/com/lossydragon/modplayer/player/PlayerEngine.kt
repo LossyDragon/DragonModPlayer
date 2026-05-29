@@ -69,10 +69,12 @@ class PlayerEngine(
         get() = modVars.numSequence
 
     @Volatile
-    private var paused = false
+    var paused = false
+        private set
 
     @Volatile
-    private var initialized = false
+    var initialized = false
+        private set
 
     @Volatile
     var endedNaturally: Boolean = false
@@ -147,6 +149,9 @@ class PlayerEngine(
             val audioApi = runBlocking { prefs.getOboeAudioApiFlow().first() }
             val isMono = format and Xmp.XMP_FORMAT_MONO != 0
 
+            Timber.d(
+                "load: sampleRate=$sampleRate bufferMs=$bufferMs format=$format perfMode=$perfMode audioApi=$audioApi"
+            )
             val result = Xmp.init(
                 rate = sampleRate,
                 ms = bufferMs,

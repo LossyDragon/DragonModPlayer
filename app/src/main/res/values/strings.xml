@@ -21,8 +21,8 @@
     <string name="desk_sort_button">Sort items button</string>
     <string name="dialog_message_clear_history">Clear your module search history?</string>
     <string name="dialog_message_delete_module">Delete %s?</string>
-    <string name="dialog_message_delete_playlist">Are you sure you want to delete \'%s\'?\\nThis cannot be undone!</string>
-    <string name="dialog_message_pref_reset">Are you sure you want to reset all settings to their original value?\\nThis action cannot be undone.</string>
+    <string name="dialog_message_delete_playlist">Are you sure you want to delete \'%s\'?\nThis cannot be undone!</string>
+    <string name="dialog_message_pref_reset">Are you sure you want to reset all settings to their original value?\nThis action cannot be undone.</string>
     <string name="dialog_title_clear_history">Clear History</string>
     <string name="dialog_title_delete_module">Delete Module</string>
     <string name="dialog_title_delete_playlist">Delete Playlist</string>
@@ -215,4 +215,10 @@
     <string name="snack_export_cancelled">Export Cancelled</string>
     <string name="message_no_playlists">No Playlists found</string>
     <string name="message_no_playlist_items">No entries in this playlist</string>
+    <string name="eight_bit">8-bit</string>
+    <string name="thirtytwo_bit">32-bit</string>
+    <string name="sixteen_bit">16-bit</string>
+    <string name="mono">mono</string>
+    <string name="stereo">stereo</string>
+    <string name="unsigned">unsigned</string>
 </resources>
